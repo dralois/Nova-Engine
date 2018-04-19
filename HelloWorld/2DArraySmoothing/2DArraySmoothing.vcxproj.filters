@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HelloWorld.cpp">
+    <ClCompile Include="2DArraySmoothing.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
