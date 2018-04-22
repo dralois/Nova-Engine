@@ -1,7 +1,5 @@
 #include "DiamondSquare.h"
 
-#include <iostream>
-
 using namespace std;
 
 #pragma region Properties
@@ -15,55 +13,67 @@ float * DiamondSquare::GetHeightField()
 
 #pragma region Procedures
 
-string DiamondSquare::toString()
+#pragma region Public
+
+void CopyArray(const float * pi_dSrc, float * pi_dDest, const int pi_iWidth, const int pi_iHeight)
 {
-	stringstream ss;
-	/*
-	Erstellt String
-	*/
-	for (int x = 0; x < m_iResolution; x++)
+	for (int i = 0; i < pi_iWidth; i++)
 	{
-		for (int y = 0; y < m_iResolution; y++)
+		for (int j = 0; j < pi_iHeight; j++)
 		{
-			ss << m_dHeightField[IDX(x, y, m_iResolution)] << " ";
+			pi_dDest[IDX(i, j, pi_iWidth)] = pi_dSrc[IDX(i, j, pi_iWidth)];
 		}
-		/*
-		Zeilenumbruch
-		*/
-		ss << endl;
+	}
+}
+
+void SmoothArray(float * pi_dArray, const int pi_iWidth, const int pi_iHeight)
+{
+	/*
+	Erstelle neues Array
+	*/
+	float *l_dTemp = new float[pi_iWidth * pi_iHeight];
+	/*
+	Glätte Array
+	*/
+	for (int i = 0; i < pi_iWidth; i++)
+	{
+		for (int j = 0; j < pi_iHeight; j++)
+		{
+			/*
+			Grenzwerte
+			*/
+			int l_iStartX = i == 0 ? 0 : i - 1;
+			int l_iStartY = j == 0 ? 0 : j - 1;
+			int l_iEndX = i == pi_iWidth - 1 ? pi_iWidth - 1 : i + 1;
+			int l_iEndY = j == pi_iHeight - 1 ? pi_iHeight - 1 : j + 1;
+			float l_dMean = 0.0F;
+			/*
+			Bestimme Mittelwert
+			*/
+			for (int x = l_iStartX; x <= l_iEndX; x++)
+			{
+				for (int y = l_iStartY; y <= l_iEndY; y++)
+				{
+					l_dMean += pi_dArray[IDX(x, y, pi_iWidth)];
+				}
+			}
+			/*
+			Speichere Mittelwert
+			*/
+			l_dTemp[IDX(i, j, pi_iWidth)] = l_dMean / ((l_iEndX - l_iStartX + 1) * (l_iEndY - l_iStartY + 1));
+		}
 	}
 	/*
-	Gebe String zurück
+	Kopiere geglättetes Array auf das Eingabearray
 	*/
-	return ss.str();
+	CopyArray(l_dTemp, pi_dArray, pi_iWidth, pi_iHeight);
+	/*
+	Lösche das temp Array
+	*/
+	delete[] l_dTemp;
 }
 
-void DiamondSquare::X_Initialize()
-{
-	/*
-	Initialisiere Array, Randomizer..
-	*/
-	m_dHeightField = new float[(m_iResolution + 1) * (m_iResolution + 1)];
-	m_Randomizer = normal_distribution<float>(0.0F, 1.0F);
-	m_Generator = default_random_engine();
-	m_Generator.seed(time(nullptr));
-	/*
-	Befülle Eckpunkte
-	*/
-	m_dHeightField[IDX(0, 0, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
-	m_dHeightField[IDX(0, m_iResolution, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
-	m_dHeightField[IDX(m_iResolution, 0, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
-	m_dHeightField[IDX(m_iResolution, m_iResolution, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
-	/*
-	Debug Ausgabe der Eckpunkte
-	*/
-	cout << m_dHeightField[IDX(0, 0, m_iResolution + 1)] << endl;
-	cout << m_dHeightField[IDX(0, m_iResolution, m_iResolution + 1)] << endl;
-	cout << m_dHeightField[IDX(m_iResolution, 0, m_iResolution + 1)] << endl;
-	cout << m_dHeightField[IDX(m_iResolution, m_iResolution, m_iResolution + 1)] << endl;
-}
-
-void DiamondSquare::Compute()
+void DiamondSquare::Compute(const int &pi_iSmoothCycles)
 {
 	/*
 	Init
@@ -78,7 +88,7 @@ void DiamondSquare::Compute()
 		/*
 		Führe Diamond Step aus
 		*/
-		for (int y = s; y < m_iResolution; y += 2 * s) 
+		for (int y = s; y < m_iResolution; y += 2 * s)
 		{
 			for (int x = s; x < m_iResolution; x += 2 * s)
 			{
@@ -109,9 +119,60 @@ void DiamondSquare::Compute()
 		m_dSigma /= powf(2.0f, m_dRoughness);
 	}
 	/*
+	X-mal Glätten
+	*/
+	for (int i = 0; i <= pi_iSmoothCycles; i++) {
+		SmoothArray(m_dHeightField, m_iResolution + 1, m_iResolution + 1);
+	}
+	/*
 	Auf richtige Größe zuschneiden
 	*/
 	X_Clamp();
+}
+
+string DiamondSquare::toString()
+{
+	stringstream ss;
+	/*
+	Erstellt String
+	*/
+	for (int x = 0; x < m_iResolution; x++)
+	{
+		for (int y = 0; y < m_iResolution; y++)
+		{
+			ss << m_dHeightField[IDX(x, y, m_iResolution)] << " ";
+		}
+		/*
+		Zeilenumbruch
+		*/
+		ss << endl;
+	}
+	/*
+	Gebe String zurück
+	*/
+	return ss.str();
+}
+
+#pragma endregion
+
+#pragma region Private
+
+void DiamondSquare::X_Initialize()
+{
+	/*
+	Initialisiere Array, Randomizer..
+	*/
+	m_dHeightField = new float[(m_iResolution + 1) * (m_iResolution + 1)];
+	m_Randomizer = normal_distribution<float>(0.0F, 0.25F);
+	m_Generator = default_random_engine();
+	m_Generator.seed(time(nullptr));
+	/*
+	Befülle Eckpunkte
+	*/
+	m_dHeightField[IDX(0, 0, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
+	m_dHeightField[IDX(0, m_iResolution, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
+	m_dHeightField[IDX(m_iResolution, 0, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
+	m_dHeightField[IDX(m_iResolution, m_iResolution, m_iResolution + 1)] = X_Random(0.0F, 1.0F);
 }
 
 void DiamondSquare::X_Clamp()
@@ -212,8 +273,10 @@ float DiamondSquare::X_Random(const float & pi_dMin, const float & pi_dMax)
 	/*
 	Zufallszahl zwischen Min/Max zurückgeben
 	*/
-	return (pi_dMax / 2.0F) - (l_dRand * (pi_dMax - pi_dMin));
+	return ((pi_dMin + pi_dMax) / 2.0F) + (l_dRand * (pi_dMax - pi_dMin));
 }
+
+#pragma endregion
 
 #pragma endregion
 

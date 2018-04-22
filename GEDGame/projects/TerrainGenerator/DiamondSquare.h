@@ -4,6 +4,7 @@
 #include <time.h>
 #include <cstdlib>
 #include <sstream>
+
 /*
 Arrayzugriff (Breite w) an Position X/Y
 */
@@ -26,8 +27,9 @@ public:
 
 	/*
 	Führt Algorithmus aus
+	@param pi_iSmoothCycles: Anzahl der Glättungen
 	*/
-	void Compute();
+	void Compute(const int &pi_iSmoothCycles);
 
 	/*
 	Für Debug Zwecke
@@ -40,8 +42,8 @@ private:
 	*/
 	std::normal_distribution<float> m_Randomizer;
 	std::default_random_engine m_Generator;
-	float m_dRoughness = 1.25F;
-	float m_dSigma = 0.5F;
+	float m_dRoughness = 0.9F;
+	float m_dSigma = 1.0F;
 	float *m_dHeightField;
 	int m_iResolution;
 
