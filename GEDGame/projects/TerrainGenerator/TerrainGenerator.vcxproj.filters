@@ -21,9 +21,15 @@
     <ClCompile Include="DiamondSquare.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="NormalsTexturesGen.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DiamondSquare.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="NormalsTexturesGen.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

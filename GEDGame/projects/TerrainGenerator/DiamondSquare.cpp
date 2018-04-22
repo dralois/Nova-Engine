@@ -282,10 +282,8 @@ float DiamondSquare::X_Random(const float & pi_dMin, const float & pi_dMax)
 
 #pragma region Constructor & Destructor
 
-DiamondSquare::DiamondSquare(const int & pi_iResolution)
-{
-	m_iResolution = pi_iResolution;
-}
+DiamondSquare::DiamondSquare(const int & pi_iResolution) : 
+	m_iResolution(pi_iResolution) {}
 
 DiamondSquare::~DiamondSquare()
 {

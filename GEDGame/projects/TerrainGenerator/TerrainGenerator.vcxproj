@@ -161,10 +161,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DiamondSquare.cpp" />
+    <ClCompile Include="NormalsTexturesGen.cpp" />
     <ClCompile Include="TerrainGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DiamondSquare.h" />
+    <ClInclude Include="NormalsTexturesGen.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
