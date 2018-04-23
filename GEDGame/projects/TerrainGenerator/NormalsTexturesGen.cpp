@@ -72,9 +72,9 @@ void NormalsTexturesGen::X_GenerateNormals(const string &pi_sNormalsPath)
 			l_v3N.y = (l_v3N.y + 1.0F) / 2.0F;
 			l_v3N.z = (l_v3N.z + 1.0F) / 2.0F;
 			/*
-			In dem Bild speichern (X/Y muss vertauscht werden!)
+			In dem Bild speichern
 			*/
-			l_bmpNormals.setPixel(y, x, l_v3N.y, l_v3N.x, l_v3N.z);
+			l_bmpNormals.setPixel(x, y, l_v3N.x, l_v3N.y, l_v3N.z);
 		}
 	}
 	/*
