@@ -1,7 +1,5 @@
 #include "NormalsTexturesGen.h"
 
-#include <iostream>
-
 using namespace std;
 using namespace GEDUtils;
 
@@ -36,25 +34,24 @@ inline Vec3 X_GetBlendedCol(const Vec3 &pi_dColor0, const Vec3 &pi_dColor1, cons
 }
 
 /*
+Kalkuliere Alpha-Werte basierend auf Höhe und Steigung
+*/
+inline void X_CalcAlphas(float pi_dHeight, float pi_dSlope, float &po_dAlpha1, float &po_dAlpha2, float &po_dAlpha3)
+{
+	po_dAlpha1 = (1.0F - pi_dHeight) * (pi_dSlope > 0.3 ? 1.0F : 0.0F);
+	po_dAlpha2 = pi_dHeight * (pi_dSlope <= 0.3 ? 1.0F : 0.0F);
+	po_dAlpha3 = pi_dHeight * (pi_dSlope > 0.3 ? 1.0F : 0.0F);
+}
+
+/*
 Farbe als Vektor
 */
 inline Vec3 X_GetColorTiled(const SimpleImage &pi_bmpImage, UINT pi_iX, UINT pi_iY)
 {
 	Vec3 l_v3Return;
-	pi_bmpImage.getPixel(pi_iX % pi_bmpImage.getWidth(),
-						pi_iY % pi_bmpImage.getHeight(),
+	pi_bmpImage.getPixel(pi_iX % pi_bmpImage.getWidth(), pi_iY % pi_bmpImage.getHeight(),
 						l_v3Return.x, l_v3Return.y, l_v3Return.z);
 	return l_v3Return;
-}
-
-/*
-Kalkuliere Alpha-Werte basierend auf Höhe und Steigung
-*/
-inline void X_CalcAlphas(float pi_dHeight, float pi_dSlope, float &po_dAlpha1, float &po_dAlpha2, float &po_dAlpha3)
-{
-	po_dAlpha1 = pi_dHeight <= 0.5F ? pi_dHeight : 0.0F * pi_dSlope;
-	po_dAlpha2 = pi_dHeight;
-	po_dAlpha3 = pi_dHeight > 0.5F ? pi_dHeight : 0.0F * pi_dSlope;
 }
 
 /*
@@ -136,19 +133,15 @@ void NormalsTexturesGen::X_GenerateColors(const string &pi_sColorsPath)
 		for (int y = 0; y < m_iResolution; y++)
 		{
 			/*
-			Hole Steigung und Höhe
+			Berechne Steigung und hole Höhe
 			*/
-			float l_dSlope = 1.0F - m_v3NormalField[IDX(x, y, m_iResolution)].z;
+			float l_dSlope = acosf(m_v3NormalField[IDX(x, y, m_iResolution)].z) / (3.1416F * 0.5F);	
 			float l_dHeight = m_dHeightField[IDX(x, y, m_iResolution)];
 			float l_dAlpha1, l_dAlpha2, l_dAlpha3;
 			/*
 			Berechne damit Alpha-Werte
 			*/
 			X_CalcAlphas(l_dHeight, l_dSlope, l_dAlpha1, l_dAlpha2, l_dAlpha3);
-
-			if (x % 256 == 0 && y % 256 == 0) {
-				cout << "H: " << l_dHeight << ", S: " << l_dSlope << ", A1: " << l_dAlpha1 << ", A2: " << l_dAlpha2 << ", A3: " << l_dAlpha3 << endl;
-			}
 			/*
 			Hole Farbwerte basierend auf X/Y
 			*/
