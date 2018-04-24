@@ -1,9 +1,9 @@
 #pragma once
 
-#include <random>
-#include <time.h>
-#include <cstdlib>
 #include <sstream>
+#include <cstdlib>
+#include <random>
+#include <ctime>
 
 /*
 Arrayzugriff (Breite w) an Position X/Y
