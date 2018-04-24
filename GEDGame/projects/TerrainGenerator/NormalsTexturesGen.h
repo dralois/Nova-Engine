@@ -21,6 +21,22 @@ struct Vec3
 	float y;
 	float z;
 
+	/*
+	Multipliziert Vektor mit Gleitkommazahl
+	*/
+	Vec3 operator *(const float &pi_dVal) const
+	{
+		return Vec3(this->x * pi_dVal, this->y * pi_dVal, this->z * pi_dVal);
+	}
+
+	/*
+	Addiert zwei Vektoren
+	*/
+	Vec3 operator +(const Vec3 &pi_v3Val) const 
+	{
+		return Vec3(this->x + pi_v3Val.x, this->y + pi_v3Val.y, this->z + pi_v3Val.z);
+	}
+
 	Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 	Vec3() : x(0), y(0), z(0) {}
 };
@@ -50,13 +66,17 @@ public:
 							const std::string &pi_sColorsPath, const std::string &pi_sNormalsPath);
 private:
 	/*
-	Deklarationen
+	Texturen
 	*/
-	std::string m_sLowFlat;
-	std::string m_sLowSteep;
-	std::string m_sHighFlat;
-	std::string m_sHighSteep;
+	GEDUtils::SimpleImage m_bmpLowFlat;
+	GEDUtils::SimpleImage m_bmpLowSteep;
+	GEDUtils::SimpleImage m_bmpHighFlat;
+	GEDUtils::SimpleImage m_bmpHighSteep;
+	/*
+	Höhen und Normalen sowie Array-Dimensionen
+	*/
 	float * m_dHeightField;
+	Vec3 * m_v3NormalField;
 	int m_iResolution;
 
 	/*
