@@ -167,7 +167,7 @@ void DiamondSquare::X_Initialize()
 	m_dHeightField = new float[(m_iResolution + 1) * (m_iResolution + 1)];
 	m_Randomizer = normal_distribution<float>(0.0F, 0.25F);
 	m_Generator = default_random_engine();
-	m_Generator.seed(time(nullptr));
+	m_Generator.seed(static_cast<unsigned int>(time(nullptr)));
 	/*
 	Befülle Eckpunkte
 	*/
