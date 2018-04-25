@@ -62,7 +62,7 @@ public:
 	@param pi_sColorsPath:	Speicherpfad Colors
 	@param pi_sNormalsPath:	Speicherpfad Normals
 	*/
-	void GenerateAndStore(	float * pi_dHeightField, const int &pi_iResolution, 
+	void GenerateAndStore(	float * &pi_dHeightField, const int &pi_iResolution, 
 							const std::string &pi_sColorsPath, const std::string &pi_sNormalsPath);
 private:
 	/*

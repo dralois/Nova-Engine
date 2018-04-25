@@ -7,7 +7,7 @@ using namespace GEDUtils;
 
 #pragma region Public
 
-void NormalsTexturesGen::GenerateAndStore(	float *pi_dHeightField, const int &pi_iResolution, 
+void NormalsTexturesGen::GenerateAndStore(	float *&pi_dHeightField, const int &pi_iResolution, 
 											const string &pi_sColorsPath, const string &pi_sNormalsPath)
 {
 	m_iResolution = pi_iResolution;
@@ -178,7 +178,9 @@ NormalsTexturesGen::NormalsTexturesGen(	const string &pi_sLowFlat, const string 
 	m_bmpLowSteep(pi_sLowSteep.c_str()),
 	m_bmpHighFlat(pi_sHighFlat.c_str()),
 	m_bmpHighSteep(pi_sHighSteep.c_str())
-{}
+{
+
+}
 
 NormalsTexturesGen::~NormalsTexturesGen()
 {

@@ -4,7 +4,7 @@ using namespace std;
 
 #pragma region Properties
 
-float * DiamondSquare::GetHeightField()
+float *&DiamondSquare::GetHeightField()
 {
 	return m_dHeightField;
 }
@@ -15,6 +15,9 @@ float * DiamondSquare::GetHeightField()
 
 #pragma region Public
 
+/*
+Kopiere Werte von einem Array in ein anderes gleich großes
+*/
 void CopyArray(const float * pi_dSrc, float * pi_dDest, const int pi_iWidth, const int pi_iHeight)
 {
 	for (int i = 0; i < pi_iWidth; i++)
@@ -26,7 +29,11 @@ void CopyArray(const float * pi_dSrc, float * pi_dDest, const int pi_iWidth, con
 	}
 }
 
-void SmoothArray(float * pi_dArray, const int pi_iWidth, const int pi_iHeight)
+/*
+Glättet ein Array mit einem FilterRadius x FilterRadius Kern
+*/
+void SmoothArray(float * pi_dArray, const int &pi_iFilterRadius,
+				const int &pi_iWidth, const int &pi_iHeight)
 {
 	/*
 	Erstelle neues Array
@@ -42,11 +49,11 @@ void SmoothArray(float * pi_dArray, const int pi_iWidth, const int pi_iHeight)
 			/*
 			Grenzwerte
 			*/
-			int l_iStartX = i == 0 ? 0 : i - 1;
-			int l_iStartY = j == 0 ? 0 : j - 1;
-			int l_iEndX = i == pi_iWidth - 1 ? pi_iWidth - 1 : i + 1;
-			int l_iEndY = j == pi_iHeight - 1 ? pi_iHeight - 1 : j + 1;
-			float l_dMean = 0.0F;
+			int l_iStartX = i == 0 ? 0 : i - pi_iFilterRadius;
+			int l_iStartY = j == 0 ? 0 : j - pi_iFilterRadius;
+			int l_iEndX = i == pi_iWidth - 1? pi_iWidth - 1 : i + pi_iFilterRadius;
+			int l_iEndY = j == pi_iHeight - 1 ? pi_iHeight - 1 : j + pi_iFilterRadius;
+			float l_dAvg = 0.0F;
 			/*
 			Bestimme Mittelwert
 			*/
@@ -54,13 +61,13 @@ void SmoothArray(float * pi_dArray, const int pi_iWidth, const int pi_iHeight)
 			{
 				for (int y = l_iStartY; y <= l_iEndY; y++)
 				{
-					l_dMean += pi_dArray[IDX(x, y, pi_iWidth)];
+					l_dAvg += pi_dArray[IDX(x, y, pi_iWidth)];
 				}
 			}
 			/*
 			Speichere Mittelwert
 			*/
-			l_dTemp[IDX(i, j, pi_iWidth)] = l_dMean / ((l_iEndX - l_iStartX + 1) * (l_iEndY - l_iStartY + 1));
+			l_dTemp[IDX(i, j, pi_iWidth)] = l_dAvg / ((l_iEndX - l_iStartX + 1) * (l_iEndY - l_iStartY + 1));
 		}
 	}
 	/*
@@ -82,35 +89,30 @@ void DiamondSquare::Compute(const int &pi_iSmoothCycles)
 	/*
 	Schreite ausgehend von der Mitte durchs Array
 	*/
-	int l_iR = m_iResolution + 1;
-	for (int s = l_iR / 2; s >= 1; s /= 2)
+	int l_iResDS = m_iResolution + 1;
+	for (int s = l_iResDS / 2; s >= 1; s /= 2)
 	{
 		/*
 		Führe Diamond Step aus
 		*/
-		for (int y = s; y < m_iResolution; y += 2 * s)
+		for (int y = s; y < l_iResDS; y += 2 * s)
 		{
-			for (int x = s; x < m_iResolution; x += 2 * s)
+			for (int x = s; x < l_iResDS; x += 2 * s)
 			{
-				X_Diamond(x, y, s); m_dHeightField[IDX(x, y, m_iResolution + 1)] += m_dSigma * X_Random(-0.5F, 0.5F);
-				float ld = m_dHeightField[IDX(x, y, m_iResolution + 1)];
+				X_Diamond(x, y, s); m_dHeightField[IDX(x, y, l_iResDS)] += m_dSigma * X_Random(-0.5F, 0.5F);
 			}
 		}
 		/*
 		Führe Square Steps aus
 		*/
-		for (int y = s; y < m_iResolution; y += 2 * s)
+		for (int y = s; y < l_iResDS; y += 2 * s)
 		{
-			for (int x = s; x < m_iResolution; x += 2 * s)
+			for (int x = s; x < l_iResDS; x += 2 * s)
 			{
-				X_Square(x - s, y, s); m_dHeightField[IDX(x - s, y, m_iResolution + 1)] += m_dSigma * X_Random(-0.5F, 0.5F);
-				X_Square(x, y - s, s); m_dHeightField[IDX(x, y - s, m_iResolution + 1)] += m_dSigma * X_Random(-0.5F, 0.5F);
-				X_Square(x + s, y, s); m_dHeightField[IDX(x + s, y, m_iResolution + 1)] += m_dSigma * X_Random(-0.5F, 0.5F);
-				X_Square(x, y + s, s); m_dHeightField[IDX(x, y + s, m_iResolution + 1)] += m_dSigma * X_Random(-0.5F, 0.5F);
-				float ld1 = m_dHeightField[IDX(x - s, y, m_iResolution + 1)];
-				float ld2 = m_dHeightField[IDX(x, y - s, m_iResolution + 1)];
-				float ld3 = m_dHeightField[IDX(x + s, y, m_iResolution + 1)];
-				float ld4 = m_dHeightField[IDX(x, y + s, m_iResolution + 1)];
+				X_Square(x - s, y, s); m_dHeightField[IDX(x - s, y, l_iResDS)] += m_dSigma * X_Random(-0.5F, 0.5F);
+				X_Square(x, y - s, s); m_dHeightField[IDX(x, y - s, l_iResDS)] += m_dSigma * X_Random(-0.5F, 0.5F);
+				X_Square(x + s, y, s); m_dHeightField[IDX(x + s, y, l_iResDS)] += m_dSigma * X_Random(-0.5F, 0.5F);
+				X_Square(x, y + s, s); m_dHeightField[IDX(x, y + s, l_iResDS)] += m_dSigma * X_Random(-0.5F, 0.5F);
 			}
 		}
 		/*
@@ -122,7 +124,7 @@ void DiamondSquare::Compute(const int &pi_iSmoothCycles)
 	X-mal Glätten
 	*/
 	for (int i = 0; i <= pi_iSmoothCycles; i++) {
-		SmoothArray(m_dHeightField, m_iResolution + 1, m_iResolution + 1);
+		SmoothArray(m_dHeightField, 1, l_iResDS, l_iResDS);
 	}
 	/*
 	Auf richtige Größe zuschneiden
@@ -189,7 +191,7 @@ void DiamondSquare::X_Clamp()
 		}
 	}
 	/*
-	Schrumpfe Array
+	Schrumpfe und normalisiere Array
 	*/
 	delete[] m_dHeightField;
 	m_dHeightField = new float[m_iResolution * m_iResolution];
@@ -230,7 +232,7 @@ void DiamondSquare::X_Square(const int &pi_iX, const int &pi_iY, const int &pi_i
 	/*
 	Bestimme Wert (Beachte Randfälle)
 	*/
-	float l_dAvg;
+	float l_dAvg = 0.0F;
 	if (pi_iX == 0) {
 		l_dAvg=(m_dHeightField[IDX(pi_iX, pi_iY - pi_iLevel, m_iResolution + 1)] +
 				m_dHeightField[IDX(pi_iX, pi_iY + pi_iLevel, m_iResolution + 1)] +
@@ -265,7 +267,7 @@ void DiamondSquare::X_Square(const int &pi_iX, const int &pi_iY, const int &pi_i
 
 float DiamondSquare::X_Random(const float & pi_dMin, const float & pi_dMax)
 {
-	float l_dRand;
+	float l_dRand = 0.0F;
 	/*
 	Auf -0.5/0.5 zuschneiden
 	*/
@@ -283,7 +285,10 @@ float DiamondSquare::X_Random(const float & pi_dMin, const float & pi_dMax)
 #pragma region Constructor & Destructor
 
 DiamondSquare::DiamondSquare(const int & pi_iResolution) : 
-	m_iResolution(pi_iResolution) {}
+	m_iResolution(pi_iResolution)
+{
+
+}
 
 DiamondSquare::~DiamondSquare()
 {

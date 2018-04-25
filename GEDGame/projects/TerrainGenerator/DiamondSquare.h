@@ -21,9 +21,9 @@ public:
 	~DiamondSquare();
 
 	/*
-	Hole Pointer auf berechnete Höhen
+	Hole Referenz Pointer auf berechnete Höhen
 	*/
-	float *GetHeightField();
+	float *&GetHeightField();
 
 	/*
 	Führt Algorithmus aus
