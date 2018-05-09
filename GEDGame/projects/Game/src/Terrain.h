@@ -1,14 +1,25 @@
 #pragma once
 #include "DXUT.h"
 #include "d3dx11effect.h"
+#include "ConfigParser.h"
 
 class Terrain
 {
 public:
+
+	/*
+	Struct für Vertexdaten
+	*/
+	struct SimpleVertex {
+		DirectX::XMFLOAT4 Pos;
+		DirectX::XMFLOAT4 Normal;
+		DirectX::XMFLOAT2 UV;
+	};
+
 	Terrain(void);
 	~Terrain(void);
 
-	HRESULT create(ID3D11Device* device);
+	HRESULT create(ID3D11Device* device, ConfigParser parser);
 	void destroy();
 
 	void render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass);
@@ -18,6 +29,9 @@ private:
 	Terrain(const Terrain&);
 	Terrain(const Terrain&&);
 	void operator=(const Terrain&);
+
+	//Konfiguration
+	ConfigParser configParser;
 
 	// Terrain rendering resources
 	ID3D11Buffer*                           vertexBuffer;	// The terrain's vertices

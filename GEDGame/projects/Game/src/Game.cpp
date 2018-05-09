@@ -24,9 +24,9 @@
 
 #include "Terrain.h"
 #include "GameEffect.h"
+#include "ConfigParser.h"
 
 #include "debug.h"
-
 
 // Help macros
 #define DEG2RAD( a ) ( (a) * XM_PI / 180.f )
@@ -68,6 +68,9 @@ XMVECTOR                                g_lightDir;
 Terrain									g_terrain;
 
 GameEffect								g_gameEffect; // CPU part of Shader
+
+//Config information
+ConfigParser							g_configParser;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -155,7 +158,7 @@ int _tmain(int argc, _TCHAR* argv[])
     InitApp();
     DXUTInit( true, true, NULL ); // Parse the command line, show msgboxes on error, no extra command line params
     DXUTSetCursorSettings( true, true );
-    DXUTCreateWindow( L"TODO: Insert Title Here" ); // You may change the title
+    DXUTCreateWindow( L"Game" ); // You may change the title
 
     DXUTCreateDevice( D3D_FEATURE_LEVEL_10_0, true, 1280, 720 );
 
@@ -178,8 +181,7 @@ void InitApp()
 	char pathA[MAX_PATH];
 	size_t size;
 	wcstombs_s(&size, pathA, path, MAX_PATH);
-
-	// TODO: Parse your config file specified by "pathA" here
+	g_configParser.Load(pathA);
 
     // Intialize the user interface
 
@@ -291,10 +293,7 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice,
             pd.IAInputSignatureSize, &g_terrainVertexLayout ) );
 
 	// Create the terrain
-
-	// TODO: You might pass a ConfigParser object to the create function.
-	//       Therefore you can adjust the TerrainClass accordingly
-	V_RETURN(g_terrain.create(pd3dDevice));
+	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
 
     return S_OK;
 }

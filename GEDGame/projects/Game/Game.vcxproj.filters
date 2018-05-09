@@ -1,38 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Source">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Shader">
       <UniqueIdentifier>{f49ffabc-594a-4d16-8a37-724a8a2cd7c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quelldateien">
+      <UniqueIdentifier>{7b39b0cb-b157-484d-9e3a-8ebcd76a42ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien">
+      <UniqueIdentifier>{2d109fbb-4d6a-4eed-9e71-111ea77f7d0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\debug.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameEffect.h">
-      <Filter>Source</Filter>
+    <ClInclude Include="src\ConfigParser.h">
+      <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\Terrain.h">
-      <Filter>Source</Filter>
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameEffect.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug.h">
+      <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ConfigParser.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
     <ClCompile Include="src\Game.cpp">
-      <Filter>Source</Filter>
+      <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="src\Terrain.cpp">
-      <Filter>Source</Filter>
+      <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
