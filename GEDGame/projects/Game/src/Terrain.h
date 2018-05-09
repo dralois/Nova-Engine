@@ -38,8 +38,5 @@ private:
 	ID3D11Buffer*                           indexBuffer;	// The terrain's triangulation
 	ID3D11Texture2D*                        diffuseTexture; // The terrain's material color for diffuse lighting
 	ID3D11ShaderResourceView*               diffuseTextureSRV; // Describes the structure of the diffuse texture to the shader stages
-
-	// General resources
-	ID3D11ShaderResourceView*               debugSRV;
 };
 

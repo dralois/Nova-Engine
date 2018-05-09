@@ -16,11 +16,9 @@ Terrain::Terrain(void):
 	indexBuffer(nullptr),
 	vertexBuffer(nullptr),
 	diffuseTexture(nullptr),
-	diffuseTextureSRV(nullptr),
-	debugSRV(nullptr)
+	diffuseTextureSRV(nullptr)
 {
 }
-
 
 Terrain::~Terrain(void)
 {
@@ -30,16 +28,8 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 {
 	HRESULT hr;
 
-	// In our example, we load a debug texture
-    V(DirectX::CreateDDSTextureFromFile(device, L"resources\\debug_green.dds", nullptr, &debugSRV));
-
-	if (hr != S_OK) {
-        MessageBoxA (NULL, "Could not load texture \"resources\\debug_green.dds\"", "Invalid texture", MB_ICONERROR | MB_OK);
-		return hr;
-	}
-
-	// Load heightfield from path
-	GEDUtils::SimpleImage heightfield(parser.GetTerrainPath().Height.c_str());
+	// Heightfield fetch
+	GEDUtils::SimpleImage heightfield(parser.GetTerrainPath().Height.insert(0,"resources\\").c_str());
 
 	// This buffer contains positions, normals and texture coordinates for one triangle
 	vector<SimpleVertex> triangle = vector<SimpleVertex>(heightfield.getWidth() * heightfield.getHeight());
@@ -47,14 +37,14 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	// Easy access
 	int height = heightfield.getHeight();
 	int width = heightfield.getWidth();
+	
 	// For normal scaling
-	XMMATRIX matNormalScaling = XMMatrixScaling(parser.GetTerrainWidth(),
-												parser.GetTerrainHeight(),
-												parser.GetTerrainDepth());
+	XMMATRIX matNormalScaling = XMMatrixScaling(parser.GetTerrainWidth(), parser.GetTerrainHeight(), parser.GetTerrainDepth());
 	matNormalScaling = XMMatrixTranspose(XMMatrixInverse(nullptr, matNormalScaling));
+
 	// For each vertex
-	for (UINT x = 0; x < width; x++) {
-		for (UINT y = 0; y < height; y++) {
+	for (int x = 0; x < width; x++) {
+		for (int y = 0; y < height; y++) {
 			SimpleVertex vert;
 			// Determine texture coords
 			vert.UV = XMFLOAT2((float) x / (width - 1.0F), (float) y / (height - 1.0F));
@@ -63,7 +53,7 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 			vert.Pos.y = heightfield.getPixel(x, y) * parser.GetTerrainHeight();
 			vert.Pos.z = ((y - (height / 2.0F)) / height) * parser.GetTerrainDepth();
 			vert.Pos.w = 1;
-			// Determine normal
+			// Determine normal parts
 			float l_vTU = (heightfield.getPixel(x < width - 1 ? x + 1 : x, y) -
 				heightfield.getPixel(x > 0 ? x - 1 : x, y)) / 2.0F * height;
 			float l_vTV = (heightfield.getPixel(x, y < height - 1 ? y + 1 : y) -
@@ -76,32 +66,31 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 			vNormal = XMVector3Normalize(vNormal);
 			// Store normal
 			XMStoreFloat4(&vert.Normal, vNormal);
-			// Bring into [0-1]
-			vert.Normal.x = (vert.Normal.x + 1.0F) / 2.0F;
-			vert.Normal.y = (vert.Normal.y + 1.0F) / 2.0F;
-			vert.Normal.z = (vert.Normal.z + 1.0F) / 2.0F;
 			// Store vertex
 			triangle[IDX(x, y, heightfield.getHeight())] = vert;
 		}
 	}
 
+	// Data information
     D3D11_SUBRESOURCE_DATA id;
     id.pSysMem = &triangle[0];
-    id.SysMemPitch = 10 * sizeof(float); // Stride
+    id.SysMemPitch = 10 * sizeof(float);
     id.SysMemSlicePitch = 0;
 
+	// Buffer desc
     D3D11_BUFFER_DESC bd;
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.ByteWidth = sizeof(float) * triangle.size(); //The size in bytes of the triangle array
+	bd.ByteWidth = sizeof(SimpleVertex) * triangle.size();
     bd.CPUAccessFlags = 0;
     bd.MiscFlags = 0;
     bd.Usage = D3D11_USAGE_DEFAULT;
 
-    V(device->CreateBuffer(&bd, &id, &vertexBuffer)); // http://msdn.microsoft.com/en-us/library/ff476899%28v=vs.85%29.aspx
+	// Create buffer
+    V(device->CreateBuffer(&bd, &id, &vertexBuffer));
 
 	// Create index buffer
 	vector<int> indices;
-	// Loop through "squares" and fill with appropriate index
+	// Loop through quads and fill with appropriate indeces
 	for (int i = 0; i < width - 1; i++) {
 		for (int j = 0; j < height - 1; j++) {
 			// First triangle
@@ -127,12 +116,17 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	ZeroMemory(&id, sizeof(id));
 	id.pSysMem = &indices[0];
 
+	// Create buffer
 	V(device->CreateBuffer(&bd, &id, &indexBuffer));
 
-	// Load color texture (color map)
-	// TODO: Insert your code to load the color texture and create
-	// the texture "diffuseTexture" as well as the shader resource view
-	// "diffuseTextureSRV"
+	// Load color texture (color for terrain)
+	V(DirectX::CreateDDSTextureFromFile(device, L"resources\\terrain_color.dds", nullptr, &diffuseTextureSRV));
+
+	// Error handling
+	if (hr != S_OK) {
+		MessageBoxA(NULL, "Could not load texture \"resources\\terrain_color.dds\"", "Invalid texture", MB_ICONERROR | MB_OK);
+		return hr;
+	}
 
 	return hr;
 }
@@ -142,9 +136,8 @@ void Terrain::destroy()
 {
 	SAFE_RELEASE(vertexBuffer);
 	SAFE_RELEASE(indexBuffer);
-	SAFE_RELEASE(debugSRV);
-
-    // TODO: Release the terrain's shader resource view and texture
+	SAFE_RELEASE(diffuseTexture);
+	SAFE_RELEASE(diffuseTextureSRV);
 }
 
 
@@ -162,13 +155,16 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
     // Tell the input assembler stage which primitive topology to use
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);    
 
-    // TODO: Bind the SRV of the terrain diffuse texture to the effect variable
-    // (instead of the SRV of the debug texture)
-	V(g_gameEffect.diffuseEV->SetResource( debugSRV));
+	// Bind the diffuse texture of the terrain
+	V(g_gameEffect.diffuseEV->SetResource( diffuseTextureSRV));
 
     // Apply the rendering pass in order to submit the necessary render state changes to the device
     V(pass->Apply(0, context));
 
-    // Draw
-    context->DrawIndexed(6, 0, 0);
+	// Fetch index buffer desc
+	D3D11_BUFFER_DESC bd;
+	indexBuffer->GetDesc(&bd);
+	
+    // Draw (no. of indices must be known..)
+    context->DrawIndexed(bd.ByteWidth / sizeof(unsigned int), 0, 0);
 }
