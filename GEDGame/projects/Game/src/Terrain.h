@@ -6,10 +6,8 @@
 class Terrain
 {
 public:
-
-	/*
-	Struct für Vertexdaten
-	*/
+	
+	//Struct für Vertexdaten
 	struct SimpleVertex {
 		DirectX::XMFLOAT4 Pos;
 		DirectX::XMFLOAT4 Normal;
@@ -30,13 +28,17 @@ private:
 	Terrain(const Terrain&&);
 	void operator=(const Terrain&);
 
-	//Konfiguration
+	// Configuration
 	ConfigParser configParser;
+	int resolution;
 
 	// Terrain rendering resources
-	ID3D11Buffer*                           vertexBuffer;	// The terrain's vertices
-	ID3D11Buffer*                           indexBuffer;	// The terrain's triangulation
-	ID3D11Texture2D*                        diffuseTexture; // The terrain's material color for diffuse lighting
-	ID3D11ShaderResourceView*               diffuseTextureSRV; // Describes the structure of the diffuse texture to the shader stages
+	ID3D11Buffer*                           indexBuffer;		// The terrain's triangulation
+	ID3D11Buffer*							heightBuffer;		// Heightmap buffer
+	ID3D11ShaderResourceView*				heightBufferSRV;	// Heightmap desc
+	ID3D11Texture2D*                        normalTexture;		// Normalmap texure
+	ID3D11ShaderResourceView*				normalTextureSRV;	// Normalmap desc
+	ID3D11Texture2D*                        diffuseTexture;		// The terrain's material color for diffuse lighting
+	ID3D11ShaderResourceView*               diffuseTextureSRV;	// Describes the structure of the diffuse texture to the shader stages
 };
 
