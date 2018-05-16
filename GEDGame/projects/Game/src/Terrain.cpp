@@ -47,27 +47,31 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 		for (int y = 0; y < height; y++) {
 			SimpleVertex vert;
 			// Determine texture coords
-			vert.UV = XMFLOAT2((float) x / (width - 1.0F), (float) y / (height - 1.0F));
+			vert.UV = XMFLOAT2((float) x / (width - 1.0f), (float) y / (height - 1.0f));
 			// Determine position
-			vert.Pos.x = ((x - (width / 2.0F)) / width) * parser.GetTerrainWidth();
+			vert.Pos.x = ((x - (width / 2.0f)) / width) * parser.GetTerrainWidth();
 			vert.Pos.y = heightfield.getPixel(x, y) * parser.GetTerrainHeight();
-			vert.Pos.z = ((y - (height / 2.0F)) / height) * parser.GetTerrainDepth();
-			vert.Pos.w = 1;
+			vert.Pos.z = ((y - (height / 2.0f)) / height) * parser.GetTerrainDepth();
+			vert.Pos.w = 1.0f;
 			// Determine normal parts
 			float l_vTU = (heightfield.getPixel(x < width - 1 ? x + 1 : x, y) -
-				heightfield.getPixel(x > 0 ? x - 1 : x, y)) / 2.0F * height;
+				heightfield.getPixel(x > 0 ? x - 1 : x, y)) / 2.0f * (float) height;
 			float l_vTV = (heightfield.getPixel(x, y < height - 1 ? y + 1 : y) -
-				heightfield.getPixel(x, y > 0 ? y - 1 : y)) / 2.0F * width;
+				heightfield.getPixel(x, y > 0 ? y - 1 : y)) / 2.0f * (float) width;
 			// Create vector
-			XMVECTOR vNormal = XMVectorSet(-l_vTU, -l_vTV, 1, 0);
+			XMVECTOR vNormal = XMVectorSet(-l_vTU, -l_vTV, 1.0f, 0.0f);
+			// Normalize
+			vNormal = XMVector4Normalize(vNormal);
 			// Scale vector
 			vNormal = XMVector4Transform(vNormal, matNormalScaling);
-			// Normalize
-			vNormal = XMVector3Normalize(vNormal);
+			// Normalize again
+			vNormal = XMVector4Normalize(vNormal);
 			// Store normal
 			XMStoreFloat4(&vert.Normal, vNormal);
+			// y always points up
+			vert.Normal.y = (vert.Normal.y + 1.0f) / 2.0f;			
 			// Store vertex
-			triangle[IDX(x, y, heightfield.getHeight())] = vert;
+			triangle[IDX(x, y, width)] = vert;
 		}
 	}
 
