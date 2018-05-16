@@ -38,9 +38,9 @@ Kalkuliere Alpha-Werte basierend auf Höhe und Steigung
 */
 inline void X_CalcAlphas(float pi_dHeight, float pi_dSlope, float &po_dAlpha1, float &po_dAlpha2, float &po_dAlpha3)
 {
-	po_dAlpha1 = (1.0F - pi_dHeight) * (pi_dSlope > 0.3 ? 1.0F : 0.0F);
-	po_dAlpha2 = pi_dHeight * (pi_dSlope <= 0.3 ? 1.0F : 0.0F);
-	po_dAlpha3 = pi_dHeight * (pi_dSlope > 0.3 ? 1.0F : 0.0F);
+	po_dAlpha1 = (1.0F - pi_dHeight) * (pi_dSlope > 0.3 ? 1.0F : 0.05F);
+	po_dAlpha2 = pi_dHeight * (pi_dSlope <= 0.3 ? 1.0F : 0.05F);
+	po_dAlpha3 = pi_dHeight * (pi_dSlope > 0.3 ? 1.0F : 0.05F);
 }
 
 /*
