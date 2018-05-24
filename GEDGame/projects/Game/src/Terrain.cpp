@@ -59,7 +59,7 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 			float l_vTV = (heightfield.getPixel(x, y < height - 1 ? y + 1 : y) -
 				heightfield.getPixel(x, y > 0 ? y - 1 : y)) / 2.0f * (float) width;
 			// Create vector
-			XMVECTOR vNormal = XMVectorSet(-l_vTU, -l_vTV, 1.0f, 0.0f);
+			XMVECTOR vNormal = XMVectorSet(-l_vTU, 1.0f, -l_vTV, 0.0f);
 			// Normalize
 			vNormal = XMVector4Normalize(vNormal);
 			// Scale vector
