@@ -1,10 +1,8 @@
 Frage 1:
-Der Vertexbuffer müsste größer sein (nämlich so groß wie aktuell der Indexbuffer),
-außerdem müsste die Reihenfolge der Vertices den Indices entsprechen (also z.B. [v0,v1,v2,v2,v1,v3,..])
+0/2/1/0/3/2/2/3/5/2/5/4/1/2/4
+(Von dem niedrigsten aus im UZS für jedes Triangle)
 
 Frage 2:
-cP = a1*cA + a2*cB + a3*cC
-=> a1 = PBC / ABC = 6.4 / 19.21 ~ 0.33
-=> a2 = PCA / ABC = 9.6 / 19.21 ~ 0.5
-=> a3 = PAB / ABC = 3.2 / 19.21 ~ 0.16
-cP = 0.33*cA + 0.5*cB + 0.16*cC = (0.5, 0.5, 0.66)
+r = d - 2*(d*n)*n, wobei d = (10,0,0) und n = (1,2,0) = (0.45,0.89,0) [normalisiert]
+d*n = (10,0,0) * (0.45,0.89,0) = 4,47
+=> (10,0,0) - 8.94 * (0.45,0.89,0) = (5.98,-7.96,0) = (6,-8,0) = (0.6,-0.8,0) [normalisiert]

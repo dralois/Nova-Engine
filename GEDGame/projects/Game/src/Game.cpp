@@ -56,8 +56,7 @@ CDXUTTextHelper*                        g_txtHelper = NULL;
 CDXUTDialog                             g_hud;                  // dialog for standard controls
 CDXUTDialog                             g_sampleUI;             // dialog for sample specific controls
 
-ID3D11InputLayout*                      g_terrainVertexLayout; // Describes the structure of the vertex buffer to the input assembler stage
-
+//ID3D11InputLayout*                      g_terrainVertexLayout; // Describes the structure of the vertex buffer to the input assembler stage
 
 bool                                    g_terrainSpinning = true;
 XMMATRIX                                g_terrainWorld; // object- to world-space transformation
@@ -277,21 +276,6 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice,
     g_camera.SetViewParams(vEye, vAt); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
 	g_camera.SetScalers(g_cameraRotateScaler, g_cameraMoveScaler);
 
-	// Define the input layout
-	const D3D11_INPUT_ELEMENT_DESC layout[] = // http://msdn.microsoft.com/en-us/library/bb205117%28v=vs.85%29.aspx
-	{
-		{ "SV_POSITION",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",         0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",       0, DXGI_FORMAT_R32G32_FLOAT,       0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	UINT numElements = sizeof( layout ) / sizeof( layout[0] );
-
-	// Create the input layout
-    D3DX11_PASS_DESC pd;
-	V_RETURN(g_gameEffect.pass0->GetDesc(&pd));
-	V_RETURN( pd3dDevice->CreateInputLayout( layout, numElements, pd.pIAInputSignature,
-            pd.IAInputSignatureSize, &g_terrainVertexLayout ) );
-
 	// Create the terrain
 	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
 
@@ -309,7 +293,6 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
     g_dialogResourceManager.OnD3D11DestroyDevice();
     g_settingsDlg.OnD3D11DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
-    SAFE_RELEASE( g_terrainVertexLayout );
     
 	// Destroy the terrain
 	g_terrain.destroy();
@@ -484,6 +467,16 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext 
 	// Start with identity matrix
     g_terrainWorld = XMMatrixIdentity();
     
+	// Create scale matrix
+	XMMATRIX terrainScale = XMMatrixScaling(
+		g_configParser.GetTerrainWidth(),
+		g_configParser.GetTerrainHeight(),
+		g_configParser.GetTerrainDepth()
+	);
+
+	// Apply scaling
+	g_terrainWorld = XMMatrixMultiply(g_terrainWorld, terrainScale);
+
     if( g_terrainSpinning ) 
     {
 		// If spinng enabled, rotate the world matrix around the y-axis
@@ -536,13 +529,18 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
     XMMATRIX const view = g_camera.GetViewMatrix(); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
     XMMATRIX const proj = g_camera.GetProjMatrix(); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb147302%28v=vs.85%29.aspx
     XMMATRIX worldViewProj = g_terrainWorld * view * proj;
+	// Transpose and inverse the world matrix
+	XMMATRIX worldNormal = XMMatrixTranspose(XMMatrixInverse(nullptr, g_terrainWorld));
+	// Save in shader
 	V(g_gameEffect.worldEV->SetMatrix( ( float* )&g_terrainWorld ));
 	V(g_gameEffect.worldViewProjectionEV->SetMatrix( ( float* )&worldViewProj ));
+	V(g_gameEffect.worldNormalsMatrix->SetMatrix( ( float* )&worldNormal ));
 	V(g_gameEffect.lightDirEV->SetFloatVector( ( float* )&g_lightDir ));
 
-    // Set input layout
-    pd3dImmediateContext->IASetInputLayout( g_terrainVertexLayout );
+    // Input layout isn't needed anymore
+    pd3dImmediateContext->IASetInputLayout( nullptr );
 
+	// Perform rendering
 	g_terrain.render(pd3dImmediateContext, g_gameEffect.pass0);
     
     DXUT_BeginPerfEvent( DXUT_PERFEVENTCOLOR, L"HUD / Stats" );
