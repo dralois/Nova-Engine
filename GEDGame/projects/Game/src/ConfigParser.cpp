@@ -2,6 +2,11 @@
 
 #pragma region Properties
 
+ConfigParser::Mesh ConfigParser::GetMesh()
+{
+	return cockpitMesh;
+}
+
 float ConfigParser::GetSpinning()
 {
 	return spinning;
@@ -86,6 +91,9 @@ void ConfigParser::Load(string filename)
 				else if (name == "BackgroundColor")
 				{
 					l_strSrc >> backgroundColor.r >> backgroundColor.g >> backgroundColor.b;
+				}
+				else if (name == "Mesh") {
+					l_strSrc >> cockpitMesh.Identifier >> cockpitMesh.File >> cockpitMesh.Diffuse >> cockpitMesh.Specular >> cockpitMesh.Glow;
 				}
 				else if (name == "TerrainPath")
 				{

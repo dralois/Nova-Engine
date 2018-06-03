@@ -22,6 +22,7 @@
 
 #include "d3dx11effect.h"
 
+#include "Mesh.h"
 #include "Terrain.h"
 #include "GameEffect.h"
 #include "ConfigParser.h"
@@ -68,8 +69,12 @@ Terrain									g_terrain;
 
 GameEffect								g_gameEffect; // CPU part of Shader
 
-//Config information
+// Config information
 ConfigParser							g_configParser;
+
+// Cockpit mesh
+Mesh*									g_cockpitMesh = nullptr;
+bool									g_enableCameraFly = false;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -102,6 +107,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
                                  float fElapsedTime, void* pUserContext );
 
 void InitApp();
+void DeinitApp();
 void RenderText();
 
 void ReleaseShader();
@@ -163,6 +169,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
     DXUTMainLoop(); // Enter into the DXUT render loop
 
+	// Shutdown the app
+	DXUTShutdown();
+	DeinitApp();
+
     return DXUTGetExitCode();
 }
 
@@ -182,6 +192,12 @@ void InitApp()
 	wcstombs_s(&size, pathA, path, MAX_PATH);
 	g_configParser.Load(pathA);
 
+	// Load the cockpit mesh
+	g_cockpitMesh = new Mesh("resources\\" + g_configParser.GetMesh().File, 
+							"resources\\" + g_configParser.GetMesh().Diffuse,
+							"resources\\" + g_configParser.GetMesh().Specular, 
+							"resources\\" + g_configParser.GetMesh().Glow);
+
     // Intialize the user interface
 
     g_settingsDlg.Init( &g_dialogResourceManager );
@@ -200,6 +216,13 @@ void InitApp()
     g_sampleUI.SetCallback( OnGUIEvent ); iY = 10;
     iY += 24;
     g_sampleUI.AddCheckBox( IDC_TOGGLESPIN, L"Toggle Spinning", 0, iY += 24, 125, 22, g_terrainSpinning );   
+}
+
+//--------------------------------------------------------------------------------------
+// Deletes everything before shutdown
+//--------------------------------------------------------------------------------------
+void DeinitApp() {
+	SAFE_DELETE(g_cockpitMesh);
 }
 
 //--------------------------------------------------------------------------------------
@@ -269,15 +292,22 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice,
 
     V_RETURN( ReloadShader(pd3dDevice) );
     
-    
+	// Create the terrain
+	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
+
     // Initialize the camera
-	XMVECTOR vEye = XMVectorSet(0.0f, 400.0f, -500.0f, 0.0f);   // Camera eye is here
-    XMVECTOR vAt = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);               // ... facing at this position
+	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetCameraHeight() * g_configParser.GetTerrainHeight() +
+		g_configParser.GetTerrainHeight() * 0.25f, 0.0f, 0.0f);		// Camera eye is here
+    XMVECTOR vAt = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);		// ... facing at this position
     g_camera.SetViewParams(vEye, vAt); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
 	g_camera.SetScalers(g_cameraRotateScaler, g_cameraMoveScaler);
 
-	// Create the terrain
-	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
+	// Adjust camera spinning
+	g_terrainSpinning = fabs(g_configParser.GetSpinning()) > 0.0f;
+
+	// Create the cockpit mesh and input layout
+	V_RETURN(g_cockpitMesh->create(pd3dDevice));
+	V_RETURN(g_cockpitMesh->createInputLayout(pd3dDevice, g_gameEffect.meshPass1));
 
     return S_OK;
 }
@@ -296,6 +326,10 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
     
 	// Destroy the terrain
 	g_terrain.destroy();
+
+	// Destroy cockpit and input layout
+	g_cockpitMesh->destroy();
+	g_cockpitMesh->destroyInputLayout();
 
     SAFE_DELETE( g_txtHelper );
     ReleaseShader();
@@ -330,7 +364,7 @@ HRESULT CALLBACK OnD3D11ResizedSwapChain( ID3D11Device* pd3dDevice, IDXGISwapCha
     g_cameraParams.farPlane = 5000.f;
 
     g_camera.SetProjParams(g_cameraParams.fovy, g_cameraParams.aspect, g_cameraParams.nearPlane, g_cameraParams.farPlane);
-	g_camera.SetEnablePositionMovement(true);
+	g_camera.SetEnablePositionMovement(g_enableCameraFly);
 	g_camera.SetRotateButtons(true, false, false);
 	g_camera.SetScalers( g_cameraRotateScaler, g_cameraMoveScaler );
 	g_camera.SetDrag( true );
@@ -423,6 +457,11 @@ void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserC
 	UNREFERENCED_PARAMETER(bKeyDown);
 	UNREFERENCED_PARAMETER(bAltDown);
 	UNREFERENCED_PARAMETER(pUserContext);
+	// Reenable camera movement for debug purposes
+	if (nChar == 'C' && bKeyDown) {
+		g_enableCameraFly = !g_enableCameraFly;
+		g_camera.SetEnablePositionMovement(g_enableCameraFly);
+	}
 }
 
 //--------------------------------------------------------------------------------------
@@ -543,6 +582,31 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	// Perform rendering
 	g_terrain.render(pd3dImmediateContext, g_gameEffect.pass0);
     
+	// Create matrices for cockpit mesh transformation
+	XMMATRIX mTrans, mScale, mRot;
+	mRot = XMMatrixRotationY(DEG2RAD(180.0f));
+	mTrans = XMMatrixTranslation(0.0f, -0.8f, 2.1f);
+	mScale = XMMatrixScaling(0.05f, 0.05f, 0.05f);
+
+	// Object to world space for cockpit in correct order (for lighting)
+	XMMATRIX mWorld = mScale * mRot * mTrans * g_camera.GetWorldMatrix();
+	// Object to clip space (for rendering)
+	XMMATRIX mWorldViewProj = mWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
+	// Normals transformation matrix (inverse transposed of world)
+	XMMATRIX mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
+	// Store camera position
+	XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
+
+	// Save in shader
+	V(g_gameEffect.worldEV->SetMatrix( ( float* )&mWorld ));
+	V(g_gameEffect.worldViewProjectionEV->SetMatrix( ( float* )&mWorldViewProj ));
+	V(g_gameEffect.worldNormalsMatrix->SetMatrix( ( float* )&mWorldNormals ))
+	V(g_gameEffect.cameraPosWorldEV->SetFloatVector( ( float* )&mcameraPosWorld ));
+
+	// Render the cockpit accordingly
+	g_cockpitMesh->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV, 
+		g_gameEffect.specularEV, g_gameEffect.glowEV);
+
     DXUT_BeginPerfEvent( DXUT_PERFEVENTCOLOR, L"HUD / Stats" );
     V(g_hud.OnRender( fElapsedTime ));
     V(g_sampleUI.OnRender( fElapsedTime ));

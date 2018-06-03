@@ -27,6 +27,11 @@ Terrain::~Terrain(void)
 {
 }
 
+float Terrain::GetCameraHeight()
+{
+	return cameraHeight;
+}
+
 // Converts string to wchar_t pointer (use with caution, don't forget to delete)
 wchar_t * strtowchar_t(string input) {
 	wchar_t * output = new wchar_t[input.length() + 1];
@@ -52,6 +57,9 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 			dHeightfield[IDX(x, y, resolution)] = heightfield.getPixel(x, y);
 		}
 	}
+
+	// Store camera position
+	cameraHeight = dHeightfield[IDX(resolution / 2, resolution / 2, resolution)];
 
 	// Create index buffer
 	vector<int> indices;

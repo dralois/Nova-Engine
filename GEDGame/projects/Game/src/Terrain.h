@@ -7,7 +7,7 @@ class Terrain
 {
 public:
 	
-	//Struct für Vertexdaten
+	//Struct for vertices
 	struct SimpleVertex {
 		DirectX::XMFLOAT4 Pos;
 		DirectX::XMFLOAT4 Normal;
@@ -16,6 +16,9 @@ public:
 
 	Terrain(void);
 	~Terrain(void);
+
+	// Returns height at camera position (middle of the terrain)
+	float GetCameraHeight();
 
 	HRESULT create(ID3D11Device* device, ConfigParser parser);
 	void destroy();
@@ -31,6 +34,9 @@ private:
 	// Configuration
 	ConfigParser configParser;
 	int resolution;
+
+	// For camera
+	float cameraHeight;
 
 	// Terrain rendering resources
 	ID3D11Buffer*                           indexBuffer;		// The terrain's triangulation

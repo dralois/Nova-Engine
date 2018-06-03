@@ -13,6 +13,15 @@ public:
 
 	ConfigParser();
 	
+	struct Mesh 
+	{
+		string Identifier;
+		string File;
+		string Diffuse;
+		string Specular;
+		string Glow;
+	};
+
 	struct TerrainPath 
 	{
 		string Height;
@@ -39,6 +48,7 @@ public:
 
 #pragma region Properties
 
+	Mesh GetMesh();
 	float GetSpinning();
 	float GetSpinSpeed();
 	Color GetBackgroundColor();
@@ -57,6 +67,8 @@ private:
 
 	float spinning;
 	float spinSpeed;
+
+	Mesh cockpitMesh;
 
 	Color backgroundColor;
 

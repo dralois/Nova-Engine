@@ -26,10 +26,14 @@ struct GameEffect
 	ID3DX11Effect*                          effect; // The whole rendering effect
 	ID3DX11EffectTechnique*                 technique; // One technique to render the effect
 	ID3DX11EffectPass*                      pass0; // One rendering pass of the technique
+	ID3DX11EffectPass*                      meshPass1; // One rendering pass of the technique
 	ID3DX11EffectMatrixVariable*            worldEV; // World matrix effect variable
 	ID3DX11EffectMatrixVariable*            worldViewProjectionEV; // WorldViewProjection matrix effect variable
 	ID3DX11EffectShaderResourceVariable*    diffuseEV; // Effect variable for the diffuse color texture
+	ID3DX11EffectShaderResourceVariable*    specularEV; // Effect variable for the specular color texture
+	ID3DX11EffectShaderResourceVariable*    glowEV; // Effect variable for the glow color texture
 	ID3DX11EffectVectorVariable*            lightDirEV; // Light direction in object space
+	ID3DX11EffectVectorVariable*            cameraPosWorldEV; // Camera position in world space
 
 	ID3DX11EffectShaderResourceVariable*	heightmap;	// Heightmap texture
 	ID3DX11EffectShaderResourceVariable*	normalmap;	// Normalmap texture
@@ -61,6 +65,7 @@ struct GameEffect
 
 		// Obtain the effect pass
 		SAFE_GET_PASS(technique, "P0", pass0);
+		SAFE_GET_PASS(technique, "P1_Mesh", meshPass1);
 
 		// Obtain the effect variables
 		SAFE_GET_RESOURCE(effect, "g_Diffuse", diffuseEV);
@@ -71,6 +76,9 @@ struct GameEffect
 		SAFE_GET_RESOURCE(effect, "g_NormalMap", normalmap);
 		SAFE_GET_SCALAR(effect, "g_TerrainRes", resolution);
 		SAFE_GET_MATRIX(effect, "g_WorldNormals", worldNormalsMatrix);
+		SAFE_GET_RESOURCE(effect, "g_Specular", specularEV);
+		SAFE_GET_RESOURCE(effect, "g_Glow", glowEV);
+		SAFE_GET_VECTOR(effect, "g_CameraPos", cameraPosWorldEV);		
 
 		return S_OK;
 	}
