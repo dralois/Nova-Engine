@@ -574,7 +574,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	V(g_gameEffect.worldEV->SetMatrix( ( float* )&g_terrainWorld ));
 	V(g_gameEffect.worldViewProjectionEV->SetMatrix( ( float* )&worldViewProj ));
 	V(g_gameEffect.worldNormalsMatrix->SetMatrix( ( float* )&worldNormal ));
-	V(g_gameEffect.lightDirEV->SetFloatVector( ( float* )&g_lightDir ));
+	V(g_gameEffect.lightDirEV->SetFloatVector( ( float* )&g_lightDir ));	
 
     // Input layout isn't needed anymore
     pd3dImmediateContext->IASetInputLayout( nullptr );

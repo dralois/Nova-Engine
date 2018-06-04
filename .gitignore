@@ -271,3 +271,5 @@ __pycache__/
 !/Tools/**
 !/art/**
 
+# Debug resources
+/GEDGame/projects/Game/resources
