@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -13,6 +15,7 @@ public:
 
 	ConfigParser();
 	
+	// Stores mesh information
 	struct Mesh 
 	{
 		string Identifier;
@@ -22,6 +25,21 @@ public:
 		string Glow;
 	};
 
+	// Saves transformation configurations for objects that need to be rendered
+	struct RenderObject 
+	{
+		string Classification;
+		string Identifier;
+		float Scale;
+		float RotationX;
+		float RotationY;
+		float RotationZ;
+		float TranslationX;
+		float TranslationY;
+		float TranslationZ;
+	};
+
+	// Stores terrain information
 	struct TerrainPath 
 	{
 		string Height;
@@ -29,15 +47,14 @@ public:
 		string Normal;
 	};
 
+	// Stores a color
 	struct Color
 	{
 		float r;
 		float g;
 		float b;
 
-		/*
-		Gibt Farbe als String aus
-		*/
+		// Returns color as string
 		string toString() 
 		{
 			ostringstream ss;
@@ -48,7 +65,8 @@ public:
 
 #pragma region Properties
 
-	Mesh GetMesh();
+	vector<RenderObject> GetRenderObjs();
+	map<string, Mesh> GetMeshes();
 	float GetSpinning();
 	float GetSpinSpeed();
 	Color GetBackgroundColor();
@@ -68,7 +86,9 @@ private:
 	float spinning;
 	float spinSpeed;
 
-	Mesh cockpitMesh;
+	vector<RenderObject> renderObjs;
+
+	map<string, Mesh> meshDictionary;
 
 	Color backgroundColor;
 

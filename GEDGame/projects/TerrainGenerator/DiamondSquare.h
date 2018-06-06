@@ -5,78 +5,47 @@
 #include <random>
 #include <ctime>
 
-/*
-Arrayzugriff (Breite w) an Position X/Y
-*/
 #define IDX(x, y, w) ((x) + (y) * (w))
 
 class DiamondSquare
 {
 public:
-	/*
-	Erstellt DiamondSquare Rechner
-	@param pi_iResolution: Auflösung (2^n)
-	*/
+	
 	DiamondSquare(const int &pi_iResolution);
+	
 	~DiamondSquare();
 
-	/*
-	Hole Referenz Pointer auf berechnete Höhen
-	*/
+	// Reference to the heightfield
 	float *&GetHeightField();
 
-	/*
-	Führt Algorithmus aus
-	@param pi_iSmoothCycles: Anzahl der Glättungen
-	*/
+	// Runs algorithm (smoothes x times)
 	void Compute(const int &pi_iSmoothCycles);
 
-	/*
-	Für Debug Zwecke
-	*/
+	// Debug output
 	std::string toString();
 
 private:
-	/*
-	Deklarationen
-	*/
+	
 	std::normal_distribution<float> m_Randomizer;
 	std::default_random_engine m_Generator;
+	const unsigned int m_iSeed = 12696;
 	float m_dRoughness = 0.9F;
 	float m_dSigma = 1.0F;
 	float *m_dHeightField;
 	int m_iResolution;
 
-	/*
-	Initialisiert Array, Randomizer..
-	*/
+	// Initialize values
 	void X_Initialize();
 	
-	/*
-	Reduziert die Größe auf Resolution - 1
-	*/
+	// Clamp to a base of 2
 	void X_Clamp();
 
-	/*
-	Diamond Step
-	@param pi_iX: X-Position des Steps
-	@param pi_iY: Y-Position des Steps
-	@param pi_iLevel: Aktuelle Stufe (Schrittweite)
-	*/
+	// Diamond step
 	void X_Diamond(const int &pi_iX, const int &pi_iY, const int &pi_iLevel);
 	
-	/*
-	Square Step
-	@param pi_iX: X-Position des Steps
-	@param pi_iY: Y-Position des Steps
-	@param pi_iLevel: Aktuelle Stufe (Schrittweite)
-	*/
+	// Square step
 	void X_Square(const int &pi_iX, const int &pi_iY, const int &pi_iLevel);
 	
-	/*
-	Gibt normal verteilte Zufallszahl
-	@param pi_dMin: Minimum
-	@param pi_dMax: Maximum
-	*/
+	// Get random float
 	float X_Random(const float &pi_dMin, const float &pi_dMax);
 };

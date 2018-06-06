@@ -182,7 +182,9 @@ HRESULT Mesh::createTexture(ID3D11Device* device, const std::wstring& filename, 
 					  ID3D11ShaderResourceView** srv)
 {
 	HRESULT hr;
-    V_RETURN(DirectX::CreateDDSTextureFromFile(device, filename.c_str(), (ID3D11Resource**)tex, srv));
+	if (filename.c_str()[filename.length() - 1] != '-') {
+		V_RETURN(DirectX::CreateDDSTextureFromFile(device, filename.c_str(), (ID3D11Resource**)tex, srv));
+	}
 
 	return S_OK;
 

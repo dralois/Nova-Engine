@@ -23,9 +23,7 @@ void NormalsTexturesGen::GenerateAndStore(	float *&pi_dHeightField, const int &p
 
 #pragma region Helper Functions
 
-/*
-Überschneidet vier Farben und die zugehörigen Alphawerte (Alpha 0 ist immer 1)
-*/
+// Blends four colors based on their alpha values
 inline Vec3 X_GetBlendedCol(const Vec3 &pi_dColor0, const Vec3 &pi_dColor1, const Vec3 &pi_dColor2, const Vec3 &pi_dColor3, 
 							const float &pi_dAlpha1, const float &pi_dAlpha2, const float &pi_dAlpha3)
 {
@@ -33,9 +31,7 @@ inline Vec3 X_GetBlendedCol(const Vec3 &pi_dColor0, const Vec3 &pi_dColor1, cons
 		(pi_dColor1 * pi_dAlpha1 + pi_dColor0 * (1 - pi_dAlpha1)) * (1 - pi_dAlpha2)) * (1 - pi_dAlpha3);
 }
 
-/*
-Kalkuliere Alpha-Werte basierend auf Höhe und Steigung
-*/
+// Calculates alpha values based on height and slope
 inline void X_CalcAlphas(float pi_dHeight, float pi_dSlope, float &po_dAlpha1, float &po_dAlpha2, float &po_dAlpha3)
 {
 	po_dAlpha1 = (1.0F - pi_dHeight) * (pi_dSlope > 0.3 ? 1.0F : 0.05F);
@@ -43,9 +39,7 @@ inline void X_CalcAlphas(float pi_dHeight, float pi_dSlope, float &po_dAlpha1, f
 	po_dAlpha3 = pi_dHeight * (pi_dSlope > 0.3 ? 1.0F : 0.05F);
 }
 
-/*
-Farbe als Vektor
-*/
+// Get color from texture based on position
 inline Vec3 X_GetColorTiled(const SimpleImage &pi_bmpImage, UINT pi_iX, UINT pi_iY)
 {
 	Vec3 l_v3Return;
@@ -54,17 +48,13 @@ inline Vec3 X_GetColorTiled(const SimpleImage &pi_bmpImage, UINT pi_iX, UINT pi_
 	return l_v3Return;
 }
 
-/*
-Vektorlänge
-*/
+// Vector length
 inline float X_Length(const Vec3 &pi_v3Val)
 {
 	return sqrtf(powf(pi_v3Val.x, 2.0F) + powf(pi_v3Val.y, 2.0F) + powf(pi_v3Val.z, 2.0F));
 }
 
-/*
-Normalisiere Vektor
-*/
+// Vector normalized
 inline void X_Normalize(Vec3 &pi_v3Val)
 {
 	float l_dLength = X_Length(pi_v3Val);
@@ -78,91 +68,61 @@ inline void X_Normalize(Vec3 &pi_v3Val)
 void NormalsTexturesGen::X_GenerateNormals(const string &pi_sNormalsPath)
 {
 	SimpleImage l_bmpNormals(m_iResolution, m_iResolution);
-	/*
-	Bestimme Normalen für alle Pixel
-	*/
+	// For all pixels
 	for(int x = 0; x < m_iResolution; x++)
 	{
 		for (int y = 0; y < m_iResolution; y++)
 		{
-			/*
-			Normalen X/Y berechnen
-			*/
+			// Calc U/V val
 			float l_vTU = (m_dHeightField[IDX(x < m_iResolution - 1 ? x + 1 : x, y, m_iResolution)] - 
 				m_dHeightField[IDX(x > 0 ? x - 1 : x, y, m_iResolution)]) / 2.0F * m_iResolution;
 			float l_vTV = (m_dHeightField[IDX(x, y < m_iResolution - 1 ? y + 1 : y, m_iResolution)] - 
 				m_dHeightField[IDX(x, y > 0 ? y - 1 : y, m_iResolution)]) / 2.0F * m_iResolution;
-			/*
-			Normale aufstellen
-			*/
+			// Create normal
 			Vec3 l_v3N(-l_vTU, -l_vTV, 1);
-			/*
-			Normalisieren
-			*/
+			// Normalize
 			X_Normalize(l_v3N);
-			/*
-			In den Bereich [0-1] bringen
-			*/
+			// Bring to [0-1]
 			l_v3N.x = (l_v3N.x + 1.0F) / 2.0F;
 			l_v3N.y = (l_v3N.y + 1.0F) / 2.0F;
 			l_v3N.z = (l_v3N.z + 1.0F) / 2.0F;
-			/*
-			In dem Bild speichern
-			*/
+			// Save in image
 			l_bmpNormals.setPixel(x, y, l_v3N.x, l_v3N.y, l_v3N.z);
-			/*
-			Im Normalarray speichern
-			*/
+			// Save in field
 			m_v3NormalField[IDX(x, y, m_iResolution)] = l_v3N;
 		}
 	}
-	/*
-	Normalmap speichern
-	*/
+	// Save normalmap
 	l_bmpNormals.save(pi_sNormalsPath.c_str());
 }
 
 void NormalsTexturesGen::X_GenerateColors(const string &pi_sColorsPath)
 {
 	SimpleImage l_bmpColors(m_iResolution, m_iResolution);
-	/*
-	Bestimme überschnittene Farbwerte für alle Pixel
-	*/
+	// For all pixels
 	for (int x = 0; x < m_iResolution; x++)
 	{
 		for (int y = 0; y < m_iResolution; y++)
 		{
-			/*
-			Berechne Steigung und hole Höhe
-			*/
+			// Calc slope and height
 			float l_dSlope = acosf(m_v3NormalField[IDX(x, y, m_iResolution)].z) / (3.1416F * 0.5F);	
 			float l_dHeight = m_dHeightField[IDX(x, y, m_iResolution)];
 			float l_dAlpha1, l_dAlpha2, l_dAlpha3;
-			/*
-			Berechne damit Alpha-Werte
-			*/
+			// Calc alphas
 			X_CalcAlphas(l_dHeight, l_dSlope, l_dAlpha1, l_dAlpha2, l_dAlpha3);
-			/*
-			Hole Farbwerte basierend auf X/Y
-			*/
+			// Get color vals
 			Vec3 l_v3Color0 = X_GetColorTiled(m_bmpLowFlat, x, y);
 			Vec3 l_v3Color1 = X_GetColorTiled(m_bmpLowSteep, x, y);
 			Vec3 l_v3Color2 = X_GetColorTiled(m_bmpHighFlat, x, y);
 			Vec3 l_v3Color3 = X_GetColorTiled(m_bmpHighSteep, x, y);
-			/*
-			Überschneide die Werte
-			*/
+			// Blend together
 			Vec3 l_v3Blended = X_GetBlendedCol(l_v3Color0, l_v3Color1, l_v3Color2, l_v3Color3, 
 												l_dAlpha1, l_dAlpha2, l_dAlpha3);
-			/*
-			Speichere im Bild
-			*/
+			// Save in image
 			l_bmpColors.setPixel(x, y, l_v3Blended.x, l_v3Blended.y, l_v3Blended.z);
 		}
 	}
-	/*
-	Speichere das Bild
-	*/
+	// Save the image
 	l_bmpColors.save(pi_sColorsPath.c_str());
 }
 
