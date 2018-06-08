@@ -1,3 +1,7 @@
+Wichtig: Der /resources Ordner muss in den /Game Ordner kopiert werden,
+sonst funktioniert die Solution nicht. Alternativ kann auch die .exe im Debug Ordner ausgeführt werden.
+Mit dem Hotkey 'C' kann man die Bewegung aktivieren/deaktivieren.
+
 Frage 1:
 Die benötigte Matrix lautet:
 
