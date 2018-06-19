@@ -97,7 +97,22 @@ echo ""
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\barracks\barracks_specular.png"
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\03-Environment\tower\tower.obj" -o "$(OutDir)resources\tower.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_diffuse.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"
+echo ""
+echo "Building enemies.."
+echo ""
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\man_spaceship.obj" -o "$(OutDir)resources\man_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship.obj" -o "$(OutDir)resources\juf_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -137,7 +152,22 @@ echo ""
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\barracks\barracks_specular.png"
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\03-Environment\tower\tower.obj" -o "$(OutDir)resources\tower.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_diffuse.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"
+echo ""
+echo "Building enemies.."
+echo ""
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\man_spaceship.obj" -o "$(OutDir)resources\man_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship.obj" -o "$(OutDir)resources\juf_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -177,7 +207,22 @@ echo ""
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\barracks\barracks_specular.png"
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\03-Environment\tower\tower.obj" -o "$(OutDir)resources\tower.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_diffuse.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"
+echo ""
+echo "Building enemies.."
+echo ""
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\man_spaceship.obj" -o "$(OutDir)resources\man_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship.obj" -o "$(OutDir)resources\juf_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -217,7 +262,22 @@ echo ""
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\barracks\barracks_specular.png"
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\03-Environment\tower\tower.obj" -o "$(OutDir)resources\tower.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_diffuse.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\03-Environment\tower\tower_specular.png"
+echo ""
+echo "Building enemies.."
+echo ""
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\man_spaceship.obj" -o "$(OutDir)resources\man_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\man_spaceship\maps\man_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship.obj" -o "$(OutDir)resources\juf_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_diffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_specular.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\juf_spaceship\juf_spaceship_glow.png"
+"$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>

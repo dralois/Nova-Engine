@@ -12,6 +12,8 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <list>
+#include <time.h>
 
 #include "dxut.h"
 #include "DXUTmisc.h"
@@ -38,6 +40,14 @@ using namespace DirectX;
 //--------------------------------------------------------------------------------------
 // Global variables
 //--------------------------------------------------------------------------------------
+
+// Enemy instance info
+struct EnemyInstance {
+	string Identifier;
+	XMVECTOR Position;
+	XMVECTOR Velocity;
+	int Hitpoints;
+};
 
 // Camera
 struct CAMERAPARAMS {
@@ -75,6 +85,10 @@ ConfigParser							g_configParser;
 // Cockpit mesh
 map<string, Mesh*>						g_Meshes;
 bool									g_enableCameraFly = false;
+
+// Enemies
+list<EnemyInstance>						g_enemyInstances;
+float									g_spawnTimer = 0.0f;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -171,6 +185,9 @@ void InitApp()
 	size_t size;
 	wcstombs_s(&size, pathA, path, MAX_PATH);
 	g_configParser.Load(pathA);
+
+	// Seed generator
+	srand(time(NULL));
 
 	// Save locally
 	map <string, ConfigParser::Mesh> l_Meshes = g_configParser.GetMeshes();
@@ -285,7 +302,7 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
 
 	// Initialize the camera
-	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetCameraHeight() * g_configParser.GetTerrainHeight() +
+	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetHeightAtXY(0.5, 0.5) * g_configParser.GetTerrainHeight() +
 		g_configParser.GetTerrainHeight() * 0.5f, 0.0f, 0.0f);		// Camera eye is here
 	XMVECTOR vAt = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);		// ... facing at this position
 	g_camera.SetViewParams(vEye, vAt); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
@@ -519,6 +536,85 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		g_terrainWorld *= XMMatrixRotationY(30.0f * DEG2RAD((float)fTime)); // Rotate around world-space "up" axis
 	}
 
+	// Update timer
+	g_spawnTimer -= fElapsedTime;
+
+	// If it drops below zero spawn a new enemy and reset
+	if (g_spawnTimer < 0) {
+		g_spawnTimer += g_configParser.GetSpawnInfo().Interval;
+		// Random angles
+		float alphaOuter = (rand() * XM_PI / RAND_MAX) * 2;
+		float alphaInner = (rand() * XM_PI / RAND_MAX) * 2;
+		// Random heights
+		float heightOuter = g_configParser.GetSpawnInfo().MinHeight +
+			((rand() * 1.0f / RAND_MAX) * (g_configParser.GetSpawnInfo().MaxHeight - g_configParser.GetSpawnInfo().MinHeight)) * 
+			g_configParser.GetTerrainHeight();
+		float heightInner = g_configParser.GetSpawnInfo().MinHeight +
+			((rand() * 1.0f / RAND_MAX) * (g_configParser.GetSpawnInfo().MaxHeight - g_configParser.GetSpawnInfo().MinHeight)) * 
+			g_configParser.GetTerrainHeight();
+		// Calculate positions
+		XMVECTOR s1 = XMVectorSet(
+			g_configParser.GetSpawnInfo().OuterCircleRadius * sin(alphaOuter),
+			heightOuter,
+			g_configParser.GetSpawnInfo().OuterCircleRadius * cos(alphaOuter),
+			1);
+		XMVECTOR s2 = XMVectorSet(
+			g_configParser.GetSpawnInfo().InnerCircleRadius * sin(alphaInner),
+			heightInner,
+			g_configParser.GetSpawnInfo().InnerCircleRadius * cos(alphaInner),
+			1);
+		// Create random enemy
+		EnemyInstance newEnemy;
+		// Get beginning of the map
+		map<string, ConfigParser::EnemyType> enemyTypes = g_configParser.GetEnemyTypes();
+		auto enemyIt = enemyTypes.begin();
+		// Move a random distance
+		unsigned int distance = (unsigned int)((rand() * 1.0f / RAND_MAX) * g_configParser.GetEnemyTypes().size());		
+		advance(enemyIt, distance);
+		// Get the random type
+		ConfigParser::EnemyType randEnemy = enemyIt->second;
+		// Adjust new instance
+		newEnemy.Hitpoints = randEnemy.Hitpoints;
+		newEnemy.Identifier = randEnemy.Identifier;
+		newEnemy.Position = s1;
+		newEnemy.Velocity = randEnemy.Speed * XMVector4Normalize(s2 - s1);
+		// Store in the list
+		g_enemyInstances.push_back(newEnemy);
+	}
+
+	// Update enemy positions and remove if too far out
+	for (auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); )
+	{
+		it->Position = XMVectorAdd(it->Position, XMVectorScale(it->Velocity, fElapsedTime));
+		float x = XMVectorGetX(it->Position);
+		float z = XMVectorGetZ(it->Position);
+		// If outside of the radius
+		if (sqrtf(powf(x, 2) + powf(z, 2)) > g_configParser.GetSpawnInfo().RemoveCircleRadius)
+		{
+			// Safe remove element
+			auto toRemove = it;
+			it++;
+			g_enemyInstances.erase(toRemove);
+		}
+		else
+		{
+			// Adjust position if in terrain and too low
+			x += (g_configParser.GetTerrainWidth() / 2);
+			x /= g_configParser.GetTerrainWidth();
+			z += (g_configParser.GetTerrainDepth() / 2);
+			z /= g_configParser.GetTerrainDepth();
+			// Only if in terrain..
+			if (x >= 0.0f && x <= 1.0f && z >= 0.0f && z <= 1.0f) {
+				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainHeight();
+				// Adjust position accordingly
+				if(y > XMVectorGetY(it->Position))
+					it->Position = XMVectorSetY(it->Position, y);			
+			}
+			// Increase iterator
+			it++;
+		}
+	}
+
 	// Set the light vector
 	g_lightDir = XMVectorSet(1, 1, 1, 0); // Direction to the directional light in world space    
 	g_lightDir = XMVector3Normalize(g_lightDir);
@@ -582,16 +678,16 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 
 	vector<ConfigParser::RenderObject> renderObjs = g_configParser.GetRenderObjs();
 
-	// Loop over all the meshes to be rendered for the cockpit
-	for (auto it = renderObjs.begin(); it != renderObjs.end(); ++it) {
-
-		// Create matrices for cockpit mesh transformation
+	// Loop over all the meshes to be rendered
+	for (auto it = renderObjs.begin(); it != renderObjs.end(); ++it)
+	{
+		// Create matrices for mesh transformation
 		XMMATRIX mTrans, mScale, mRot;
 		mRot = XMMatrixRotationRollPitchYaw(DEG2RAD(it->RotationX), DEG2RAD(it->RotationY),DEG2RAD(it->RotationZ));
 		mTrans = XMMatrixTranslation(it->TranslationX, it->TranslationY, it->TranslationZ);
 		mScale = XMMatrixScaling(it->Scale, it->Scale, it->Scale);
 
-		// Object to world space for cockpit in correct order (for lighting)
+		// Object to world space for mesh in correct order (for lighting)
 		XMMATRIX mWorld =  mRot * mTrans * mScale * (it->Classification == "Cockpit" ? g_camera.GetWorldMatrix() : XMMatrixIdentity());
 		// Object to clip space (for rendering)
 		XMMATRIX mWorldViewProj = mWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
@@ -604,13 +700,48 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		V(g_gameEffect.worldEV->SetMatrix((float*)&mWorld));
 		V(g_gameEffect.worldViewProjectionEV->SetMatrix((float*)&mWorldViewProj));
 		V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&mWorldNormals))
-			V(g_gameEffect.cameraPosWorldEV->SetFloatVector((float*)&mcameraPosWorld));
+		V(g_gameEffect.cameraPosWorldEV->SetFloatVector((float*)&mcameraPosWorld));
 
-		// Render the cockpit accordingly
+		// Render the mesh accordingly
 		g_Meshes[it->Identifier]->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV,
 			g_gameEffect.specularEV, g_gameEffect.glowEV);
 	}
 
+	// Loop over all the enemy instances
+	for(auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); it++)
+	{
+		// Get enemy type
+		ConfigParser::EnemyType enemyType = g_configParser.GetEnemyTypes()[it->Identifier];
+		// Create matrices
+		XMMATRIX mTrans, mScale, mRot;
+		mRot = XMMatrixRotationRollPitchYaw(DEG2RAD(enemyType.RotationX), DEG2RAD(enemyType.RotationY), DEG2RAD(enemyType.RotationZ));
+		mTrans = XMMatrixTranslation(enemyType.TranslationX, enemyType.TranslationX, enemyType.TranslationZ);
+		mScale = XMMatrixScaling(enemyType.Scale, enemyType.Scale, enemyType.Scale);
+		// Object view transformation
+		XMMATRIX mWorld = mScale * mRot *  mTrans;
+		// Rotation
+		XMMATRIX mRotAnim = XMMatrixRotationY(atan2f(XMVectorGetX(it->Velocity), XMVectorGetZ(it->Velocity)));
+		// Offset
+		XMMATRIX mTransAnim = XMMatrixTranslationFromVector(it->Position);
+		// Movement matrix
+		XMMATRIX mAnim = mRotAnim * mTransAnim;
+		// Object to clip space (for rendering)
+		XMMATRIX mWorldViewProj = mWorld * mAnim * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
+		// Normals transformation matrix (inverse transposed of world)
+		XMMATRIX mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
+		// Store camera position
+		XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
+
+		// Save in shader
+		V(g_gameEffect.worldEV->SetMatrix((float*)&mWorld));
+		V(g_gameEffect.worldViewProjectionEV->SetMatrix((float*)&mWorldViewProj));
+		V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_gameEffect.cameraPosWorldEV->SetFloatVector((float*)&mcameraPosWorld));
+
+		// Render the enemy accordingly		
+		g_Meshes[enemyType.Mesh]->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV,
+			g_gameEffect.specularEV, g_gameEffect.glowEV);
+	}
 
 	DXUT_BeginPerfEvent(DXUT_PERFEVENTCOLOR, L"HUD / Stats");
 	V(g_hud.OnRender(fElapsedTime));

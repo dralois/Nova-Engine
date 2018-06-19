@@ -17,8 +17,8 @@ public:
 	Terrain(void);
 	~Terrain(void);
 
-	// Returns height at camera position (middle of the terrain)
-	float GetCameraHeight();
+	// Returns height at a position
+	float GetHeightAtXY(float pi_dX, float pi_dY);
 
 	HRESULT create(ID3D11Device* device, ConfigParser parser);
 	void destroy();
@@ -27,16 +27,13 @@ public:
 
 
 private:
-	Terrain(const Terrain&);
-	Terrain(const Terrain&&);
-	void operator=(const Terrain&);
 
 	// Configuration
 	ConfigParser configParser;
-	int resolution;
+	int iResolution;
 
-	// For camera
-	float cameraHeight;
+	// Heightfield
+	vector<float> dHeightfield;
 
 	// Terrain rendering resources
 	ID3D11Buffer*                           indexBuffer;		// The terrain's triangulation

@@ -27,17 +27,17 @@ Terrain::~Terrain(void)
 {
 }
 
-float Terrain::GetCameraHeight()
-{
-	return cameraHeight;
-}
-
 // Converts string to wchar_t pointer (use with caution, don't forget to delete)
 wchar_t * strtowchar_t(string input) {
 	wchar_t * output = new wchar_t[input.length() + 1];
 	size_t out;
 	mbstowcs_s(&out, output, input.length() + 1, input.c_str(), input.length());
 	return output;
+}
+
+float Terrain::GetHeightAtXY(float pi_dX, float pi_dY)
+{
+	return dHeightfield[IDX((int) (iResolution-1) * pi_dX, (int) (iResolution-1) * pi_dY, iResolution)];
 }
 
 HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
@@ -48,32 +48,29 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	GEDUtils::SimpleImage heightfield(parser.GetTerrainPath().Height.insert(0,"resources\\").c_str());
 
 	// Easy access
-	resolution = heightfield.getWidth();
-	vector<float> dHeightfield (resolution * resolution);
+	iResolution = heightfield.getWidth();
+	dHeightfield = vector<float> (iResolution * iResolution);
 	
 	// Fill heightfield
-	for (int x = 0; x < resolution; x++) {
-		for (int y = 0; y < resolution; y++) {
-			dHeightfield[IDX(x, y, resolution)] = heightfield.getPixel(x, y);
+	for (int x = 0; x < iResolution; x++) {
+		for (int y = 0; y < iResolution; y++) {
+			dHeightfield[IDX(x, y, iResolution)] = heightfield.getPixel(x, y);
 		}
 	}
-
-	// Store camera position
-	cameraHeight = dHeightfield[IDX(resolution / 2, resolution / 2, resolution)];
 
 	// Create index buffer
 	vector<int> indices;
 	// Loop through quads and fill with appropriate indeces
-	for (int x = 0; x < resolution - 1; x++) {
-		for (int y = 0; y < resolution - 1; y++) {
+	for (int x = 0; x < iResolution - 1; x++) {
+		for (int y = 0; y < iResolution - 1; y++) {
 			// First triangle
-			indices.push_back((resolution * y) + x);
-			indices.push_back((resolution * y) + x + 1);
-			indices.push_back((resolution * (y + 1)) + x);
+			indices.push_back((iResolution * y) + x);
+			indices.push_back((iResolution * y) + x + 1);
+			indices.push_back((iResolution * (y + 1)) + x);
 			// Second triangle
-			indices.push_back((resolution * (y + 1)) + x);
-			indices.push_back((resolution * y) + x + 1);
-			indices.push_back((resolution * (y + 1)) + x + 1);
+			indices.push_back((iResolution * (y + 1)) + x);
+			indices.push_back((iResolution * y) + x + 1);
+			indices.push_back((iResolution * (y + 1)) + x + 1);
 		}
 	}
 
@@ -112,7 +109,7 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	// Create description
 	D3D11_BUFFER_SRV buffer;
 	buffer.FirstElement = 0;
-	buffer.NumElements = resolution * resolution;
+	buffer.NumElements = iResolution * iResolution;
 	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
 	desc.Format = DXGI_FORMAT_R32_FLOAT;
 	desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
@@ -180,7 +177,7 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
 	V(g_gameEffect.heightmap->SetResource(heightBufferSRV));
 
 	// Set the resolution
-	V(g_gameEffect.resolution->SetInt(resolution));
+	V(g_gameEffect.resolution->SetInt(iResolution));
 
     // Apply the rendering pass in order to submit the necessary render state changes to the device
     V(pass->Apply(0, context));

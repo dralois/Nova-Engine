@@ -39,6 +39,22 @@ public:
 		float TranslationZ;
 	};
 
+	// Saves enemy information
+	struct EnemyType {
+		string Identifier;
+		int Hitpoints;
+		float Size;
+		float Speed;
+		string Mesh;
+		float Scale;
+		float RotationX;
+		float RotationY;
+		float RotationZ;
+		float TranslationX;
+		float TranslationY;
+		float TranslationZ;
+	};
+
 	// Stores terrain information
 	struct TerrainPath 
 	{
@@ -47,29 +63,24 @@ public:
 		string Normal;
 	};
 
-	// Stores a color
-	struct Color
-	{
-		float r;
-		float g;
-		float b;
-
-		// Returns color as string
-		string toString() 
-		{
-			ostringstream ss;
-			ss << "(" << r << "," << g << "," << b << ")";
-			return ss.str();
-		}
+	// Stores spawn info
+	struct SpawnInfo {
+		float Interval;
+		float MinHeight;
+		float MaxHeight;
+		float OuterCircleRadius;
+		float InnerCircleRadius;
+		float RemoveCircleRadius;
 	};
 
 #pragma region Properties
 
+	map<string, EnemyType> GetEnemyTypes();
 	vector<RenderObject> GetRenderObjs();
 	map<string, Mesh> GetMeshes();
+	SpawnInfo GetSpawnInfo();
 	float GetSpinning();
 	float GetSpinSpeed();
-	Color GetBackgroundColor();
 	TerrainPath GetTerrainPath();
 	float GetTerrainWidth();
 	float GetTerrainDepth();
@@ -83,18 +94,17 @@ public:
 
 private:
 
-	float spinning;
-	float spinSpeed;
-
+	map<string, EnemyType> enemyDictionary;
+	map<string, Mesh> meshDictionary;
 	vector<RenderObject> renderObjs;
 
-	map<string, Mesh> meshDictionary;
-
-	Color backgroundColor;
-
 	TerrainPath terrainPath;
-
 	float terrainWidth;
 	float terrainDepth;
 	float terrainHeight;
+
+	SpawnInfo spawnInfo;
+
+	float spinSpeed;
+	float spinning;
 };

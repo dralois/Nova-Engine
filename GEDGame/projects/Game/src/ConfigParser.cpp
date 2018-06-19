@@ -12,6 +12,16 @@ map<string, ConfigParser::Mesh> ConfigParser::GetMeshes()
 	return meshDictionary;
 }
 
+ConfigParser::SpawnInfo ConfigParser::GetSpawnInfo()
+{
+	return spawnInfo;
+}
+
+map<string, ConfigParser::EnemyType> ConfigParser::GetEnemyTypes()
+{
+	return enemyDictionary;
+}
+
 float ConfigParser::GetSpinning()
 {
 	return spinning;
@@ -20,11 +30,6 @@ float ConfigParser::GetSpinning()
 float ConfigParser::GetSpinSpeed()
 {
 	return spinSpeed;
-}
-
-ConfigParser::Color ConfigParser::GetBackgroundColor()
-{
-	return backgroundColor;
 }
 
 ConfigParser::TerrainPath ConfigParser::GetTerrainPath()
@@ -76,11 +81,8 @@ void ConfigParser::Load(string filename)
 			{
 				l_strSrc >> spinSpeed;
 			}
-			else if (name == "BackgroundColor")
+			else if (name == "Mesh")
 			{
-				l_strSrc >> backgroundColor.r >> backgroundColor.g >> backgroundColor.b;
-			}
-			else if (name == "Mesh") {
 				l_strSrc >> name;
 				meshDictionary[name].Identifier = name;
 				l_strSrc >> meshDictionary[name].File >> meshDictionary[name].Diffuse >> 
@@ -92,6 +94,20 @@ void ConfigParser::Load(string filename)
 				l_strSrc >> newObj.Classification >> newObj.Identifier >> newObj.Scale >> newObj.RotationX >> newObj.RotationY >> 
 					newObj.RotationZ >> newObj.TranslationX >> newObj.TranslationY >> newObj.TranslationZ;
 				renderObjs.push_back(newObj);
+			}
+			else if (name == "EnemyType")
+			{
+				l_strSrc >> name;
+				enemyDictionary[name].Identifier = name;
+				l_strSrc >> enemyDictionary[name].Hitpoints >> enemyDictionary[name].Size >> enemyDictionary[name].Speed >>
+					enemyDictionary[name].Mesh >> enemyDictionary[name].Scale >> enemyDictionary[name].RotationX >>
+					enemyDictionary[name].RotationY >> enemyDictionary[name].RotationZ >> enemyDictionary[name].TranslationX >>
+					enemyDictionary[name].TranslationY >> enemyDictionary[name].TranslationZ;
+			}
+			else if (name == "Spawn")
+			{
+				l_strSrc >> spawnInfo.Interval >> spawnInfo.MinHeight >> spawnInfo.MaxHeight >>
+					spawnInfo.OuterCircleRadius >> spawnInfo.InnerCircleRadius >> spawnInfo.RemoveCircleRadius;
 			}
 			else if (name == "TerrainPath")
 			{
