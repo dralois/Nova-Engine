@@ -37,7 +37,7 @@ wchar_t * strtowchar_t(string input) {
 
 float Terrain::GetHeightAtXY(float pi_dX, float pi_dY)
 {
-	return dHeightfield[IDX((int) roundf((iResolution-1) * pi_dX), (int) roundf((iResolution-1) * pi_dY), iResolution)];
+	return dHeightfield[IDX((int)roundf((iResolution - 1) * pi_dX), (int)roundf((iResolution - 1) * pi_dY), iResolution)];
 }
 
 HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
@@ -118,8 +118,8 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	// Create SRV for the heightmap buffer
 	device->CreateShaderResourceView(heightBuffer, &desc, &heightBufferSRV);
 
-	// Convert strings
-	wchar_t * color = strtowchar_t(parser.GetTerrainInfo().ColorMap.insert(0, "resources\\"));
+	// Convert strings	
+	wchar_t * color =  strtowchar_t(parser.GetTerrainInfo().ColorMap.insert(0, "resources\\"));
 	wchar_t * normal = strtowchar_t(parser.GetTerrainInfo().NormalMap.insert(0, "resources\\"));
 
 	// Load color texture (color for terrain)

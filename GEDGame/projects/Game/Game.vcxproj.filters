@@ -30,6 +30,9 @@
     <ClInclude Include="src\T3d.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\SpriteRenderer.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ConfigParser.cpp">
@@ -47,9 +50,15 @@
     <ClCompile Include="src\T3d.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\SpriteRenderer.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\game.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\SpriteRenderer.fx">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

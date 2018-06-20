@@ -112,7 +112,12 @@ echo ""
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"
+echo ""
+echo "Converting Sprites.."
+echo ""
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailGatlingDiffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailPlasmaDiffuse.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -167,7 +172,12 @@ echo ""
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"
+echo ""
+echo "Converting Sprites.."
+echo ""
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailGatlingDiffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailPlasmaDiffuse.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -222,7 +232,12 @@ echo ""
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"
+echo ""
+echo "Converting Sprites.."
+echo ""
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailGatlingDiffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailPlasmaDiffuse.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -277,7 +292,12 @@ echo ""
 "$(SolutionDir)..\..\external\Tools\bin\obj2t3d.exe" -i "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_ship.obj" -o "$(OutDir)resources\lup_spaceship.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_diffuse_ship.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\spec_ship.png"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"</NMakeBuildCommandLine>
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\..\external\art\02-Enemies\lup_final\lup_glow_ship.png"
+echo ""
+echo "Converting Sprites.."
+echo ""
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailGatlingDiffuse.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\..\external\art\05-Sprites\Simple\parTrailPlasmaDiffuse.png"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo "Deleting old resources..."
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>

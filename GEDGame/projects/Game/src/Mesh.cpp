@@ -71,7 +71,6 @@ HRESULT Mesh::create(ID3D11Device* device)
 
 	V(device->CreateBuffer(&bd, &id, &vertexBuffer));
 
-
 	indexCount = indexBufferData.size();
 
 	ZeroMemory(&bd, sizeof(bd));
@@ -87,13 +86,10 @@ HRESULT Mesh::create(ID3D11Device* device)
 	// Create Buffer
 	V(device->CreateBuffer( &bd, &id, &indexBuffer ));
 
-
-
 	// Create textures
 	V(createTexture(device, filenameDDSDiffuse, &diffuseTex, &diffuseSRV)	);
 	V(createTexture(device, filenameDDSSpecular, &specularTex, &specularSRV));
 	V(createTexture(device, filenameDDSGlow, &glowTex, &glowSRV)			);
-
 
 	return S_OK;
 }

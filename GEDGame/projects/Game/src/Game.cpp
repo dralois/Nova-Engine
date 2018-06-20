@@ -28,6 +28,7 @@
 #include "Terrain.h"
 #include "GameEffect.h"
 #include "ConfigParser.h"
+#include "SpriteRenderer.h"
 
 #include "debug.h"
 
@@ -67,28 +68,29 @@ CDXUTTextHelper*                        g_txtHelper = NULL;
 CDXUTDialog                             g_hud;                  // dialog for standard controls
 CDXUTDialog                             g_sampleUI;             // dialog for sample specific controls
 
-																//ID3D11InputLayout*                      g_terrainVertexLayout; // Describes the structure of the vertex buffer to the input assembler stage
-
 bool                                    g_terrainSpinning = true;
 XMMATRIX                                g_terrainWorld; // object- to world-space transformation
 
 
-														// Scene information
+// Scene information
 XMVECTOR                                g_lightDir;
 Terrain									g_terrain;
 
 GameEffect								g_gameEffect; // CPU part of Shader
 
-													  // Config information
+// Config information
 ConfigParser							g_configParser;
 
-// Cockpit mesh
+// Meshes
 map<string, Mesh*>						g_Meshes;
 bool									g_enableCameraFly = false;
 
 // Enemies
 list<EnemyInstance>						g_enemyInstances;
 float									g_spawnTimer = 0.0f;
+
+// Sprite renderer
+SpriteRenderer *						g_spriteRenderer;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -199,6 +201,14 @@ void InitApp()
 			"resources\\" + l_Mesh.Specular, "resources\\" + l_Mesh.Glow);
 	}
 
+	// Store paths to sprites (will be improved in assg. 10)
+	vector<string> sprites;
+	sprites.push_back("resources\\parTrailPlasmaDiffuse.dds");
+	sprites.push_back("resources\\parTrailGatlingDiffuse.dds");
+
+	// Initialize the sprite renderer
+	g_spriteRenderer = new SpriteRenderer(sprites);
+
 	// Intialize the user interface
 
 	g_settingsDlg.Init(&g_dialogResourceManager);
@@ -227,8 +237,10 @@ void DeinitApp() {
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
 		SAFE_DELETE(it->second);
 	}
-	// Clear map
+	// Clear mesh map
 	g_Meshes.clear();
+	// Delete sprite renderer
+	SAFE_DELETE(g_spriteRenderer);
 }
 
 //--------------------------------------------------------------------------------------
@@ -319,6 +331,9 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 		V_RETURN(it->second->create(pd3dDevice));
 	}
 
+	// Create sprite renderer resources
+	V_RETURN(g_spriteRenderer->create(pd3dDevice));
+
 	return S_OK;
 }
 
@@ -344,6 +359,9 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
 		it->second->destroy();
 	}
+
+	// Destroy sprite renderer
+	g_spriteRenderer->destroy();
 
 	SAFE_DELETE(g_txtHelper);
 	ReleaseShader();
@@ -408,6 +426,9 @@ HRESULT ReloadShader(ID3D11Device* pd3dDevice)
 	ReleaseShader();
 	V_RETURN(g_gameEffect.create(pd3dDevice));
 
+	// Reload sprite renderer
+	V_RETURN(g_spriteRenderer->reloadShader(pd3dDevice));
+
 	return S_OK;
 }
 
@@ -416,7 +437,10 @@ HRESULT ReloadShader(ID3D11Device* pd3dDevice)
 //--------------------------------------------------------------------------------------
 void ReleaseShader()
 {
+	// Release game effect stuff
 	g_gameEffect.destroy();
+	// Release sprite renderer
+	g_spriteRenderer->releaseShader();
 }
 
 //--------------------------------------------------------------------------------------
@@ -670,9 +694,6 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&worldNormal));
 	V(g_gameEffect.lightDirEV->SetFloatVector((float*)&g_lightDir));
 
-	// Input layout isn't needed anymore
-	pd3dImmediateContext->IASetInputLayout(nullptr);
-
 	// Perform rendering
 	g_terrain.render(pd3dImmediateContext, g_gameEffect.pass0);
 
@@ -742,6 +763,15 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		g_Meshes[enemyType.Mesh]->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV,
 			g_gameEffect.specularEV, g_gameEffect.glowEV);
 	}
+
+	// Create abitrary sprites
+	vector<SpriteVertex> sprites;
+	sprites.push_back({ XMFLOAT3(0, 400, 0), 10, 0 });
+	sprites.push_back({ XMFLOAT3(0, 400, 100), 20, 0 });
+	sprites.push_back({ XMFLOAT3(100, 400, 0), 5, 1 });
+
+	// Render sprites last (transparent after opaque)
+	g_spriteRenderer->renderSprites(pd3dImmediateContext, sprites, g_camera);
 
 	DXUT_BeginPerfEvent(DXUT_PERFEVENTCOLOR, L"HUD / Stats");
 	V(g_hud.OnRender(fElapsedTime));

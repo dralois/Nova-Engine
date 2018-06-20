@@ -100,8 +100,8 @@ void ConfigParser::Load(string filename)
 
 #pragma region Constructors & Destructors
 
-ConfigParser::ConfigParser(){ }
+ConfigParser::ConfigParser() { }
 
-ConfigParser::~ConfigParser(){ }
+ConfigParser::~ConfigParser() { }
 
 #pragma endregion

@@ -2,11 +2,11 @@
 // Shader resources
 //--------------------------------------------------------------------------------------
 
-Buffer<float> g_HeightMap; // Buffer for height values
-Texture2D   g_Diffuse; // Material albedo for diffuse lighting
-Texture2D	g_NormalMap; // Normalmap for lighting
-Texture2D   g_Specular; // Specular texture
-Texture2D   g_Glow; // Glow texture
+Buffer<float>   g_HeightMap; // Buffer for height values
+Texture2D       g_Diffuse; // Material albedo for diffuse lighting
+Texture2D       g_NormalMap; // Normalmap for lighting
+Texture2D       g_Specular; // Specular texture
+Texture2D       g_Glow; // Glow texture
 
 
 //--------------------------------------------------------------------------------------
