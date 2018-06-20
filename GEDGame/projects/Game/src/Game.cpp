@@ -302,14 +302,14 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	V_RETURN(g_terrain.create(pd3dDevice, g_configParser));
 
 	// Initialize the camera
-	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetHeightAtXY(0.5, 0.5) * g_configParser.GetTerrainHeight() +
-		g_configParser.GetTerrainHeight() * 0.5f, 0.0f, 0.0f);		// Camera eye is here
+	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetHeightAtXY(0.5, 0.5) * g_configParser.GetTerrainInfo().Height +
+		g_configParser.GetTerrainInfo().Height * 0.5f, 0.0f, 0.0f);		// Camera eye is here
 	XMVECTOR vAt = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);		// ... facing at this position
 	g_camera.SetViewParams(vEye, vAt); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
 	g_camera.SetScalers(g_cameraRotateScaler, g_cameraMoveScaler);
 
 	// Adjust camera spinning
-	g_terrainSpinning = fabs(g_configParser.GetSpinning()) > 0.0f;
+	g_terrainSpinning = fabs(g_configParser.GetTerrainInfo().SpinSpeed) > 0.0f;
 
 	// Create input layout
 	V_RETURN(Mesh::createInputLayout(pd3dDevice, g_gameEffect.meshPass1));
@@ -522,9 +522,9 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 
 	// Create scale matrix
 	XMMATRIX terrainScale = XMMatrixScaling(
-		g_configParser.GetTerrainWidth(),
-		g_configParser.GetTerrainHeight(),
-		g_configParser.GetTerrainDepth()
+		g_configParser.GetTerrainInfo().Width,
+		g_configParser.GetTerrainInfo().Height,
+		g_configParser.GetTerrainInfo().Depth
 	);
 
 	// Apply scaling
@@ -548,10 +548,10 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		// Random heights
 		float heightOuter = g_configParser.GetSpawnInfo().MinHeight +
 			((rand() * 1.0f / RAND_MAX) * (g_configParser.GetSpawnInfo().MaxHeight - g_configParser.GetSpawnInfo().MinHeight)) * 
-			g_configParser.GetTerrainHeight();
+			g_configParser.GetTerrainInfo().Height;
 		float heightInner = g_configParser.GetSpawnInfo().MinHeight +
 			((rand() * 1.0f / RAND_MAX) * (g_configParser.GetSpawnInfo().MaxHeight - g_configParser.GetSpawnInfo().MinHeight)) * 
-			g_configParser.GetTerrainHeight();
+			g_configParser.GetTerrainInfo().Height;
 		// Calculate positions
 		XMVECTOR s1 = XMVectorSet(
 			g_configParser.GetSpawnInfo().OuterCircleRadius * sin(alphaOuter),
@@ -599,13 +599,13 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		else
 		{
 			// Adjust position if in terrain and too low
-			x += (g_configParser.GetTerrainWidth() / 2);
-			x /= g_configParser.GetTerrainWidth();
-			z += (g_configParser.GetTerrainDepth() / 2);
-			z /= g_configParser.GetTerrainDepth();
+			x += (g_configParser.GetTerrainInfo().Width / 2);
+			x /= g_configParser.GetTerrainInfo().Width;
+			z += (g_configParser.GetTerrainInfo().Depth / 2);
+			z /= g_configParser.GetTerrainInfo().Depth;
 			// Only if in terrain..
 			if (x >= 0.0f && x <= 1.0f && z >= 0.0f && z <= 1.0f) {
-				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainHeight();
+				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height;
 				// Adjust position accordingly
 				if(y > XMVectorGetY(it->Position))
 					it->Position = XMVectorSetY(it->Position, y);			

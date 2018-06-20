@@ -56,11 +56,15 @@ public:
 	};
 
 	// Stores terrain information
-	struct TerrainPath 
+	struct TerrainInfo
 	{
-		string Height;
-		string Color;
-		string Normal;
+		float Width;
+		float Height;
+		float Depth;
+		string HeightMap;
+		string ColorMap;
+		string NormalMap;
+		float SpinSpeed;
 	};
 
 	// Stores spawn info
@@ -78,13 +82,8 @@ public:
 	map<string, EnemyType> GetEnemyTypes();
 	vector<RenderObject> GetRenderObjs();
 	map<string, Mesh> GetMeshes();
+	TerrainInfo GetTerrainInfo();
 	SpawnInfo GetSpawnInfo();
-	float GetSpinning();
-	float GetSpinSpeed();
-	TerrainPath GetTerrainPath();
-	float GetTerrainWidth();
-	float GetTerrainDepth();
-	float GetTerrainHeight();
 
 #pragma endregion
 
@@ -97,14 +96,6 @@ private:
 	map<string, EnemyType> enemyDictionary;
 	map<string, Mesh> meshDictionary;
 	vector<RenderObject> renderObjs;
-
-	TerrainPath terrainPath;
-	float terrainWidth;
-	float terrainDepth;
-	float terrainHeight;
-
+	TerrainInfo terrainInfo;
 	SpawnInfo spawnInfo;
-
-	float spinSpeed;
-	float spinning;
 };

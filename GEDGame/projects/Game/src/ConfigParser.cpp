@@ -22,34 +22,9 @@ map<string, ConfigParser::EnemyType> ConfigParser::GetEnemyTypes()
 	return enemyDictionary;
 }
 
-float ConfigParser::GetSpinning()
+ConfigParser::TerrainInfo ConfigParser::GetTerrainInfo()
 {
-	return spinning;
-}
-
-float ConfigParser::GetSpinSpeed()
-{
-	return spinSpeed;
-}
-
-ConfigParser::TerrainPath ConfigParser::GetTerrainPath()
-{
-	return terrainPath;
-}
-
-float ConfigParser::GetTerrainWidth()
-{
-	return terrainWidth;
-}
-
-float ConfigParser::GetTerrainDepth()
-{
-	return terrainDepth;
-}
-
-float ConfigParser::GetTerrainHeight()
-{
-	return terrainHeight;
+	return terrainInfo;
 }
 
 #pragma endregion
@@ -72,14 +47,6 @@ void ConfigParser::Load(string filename)
 			if (name.empty() || (name[0] == '#')) {
 				getline(l_strSrc, name);
 				continue;
-			}
-			else if(name == "Spinning")			
-			{
-				l_strSrc >> spinning;
-			}
-			else if (name == "SpinSpeed")
-			{
-				l_strSrc >> spinSpeed;
 			}
 			else if (name == "Mesh")
 			{
@@ -109,26 +76,15 @@ void ConfigParser::Load(string filename)
 				l_strSrc >> spawnInfo.Interval >> spawnInfo.MinHeight >> spawnInfo.MaxHeight >>
 					spawnInfo.OuterCircleRadius >> spawnInfo.InnerCircleRadius >> spawnInfo.RemoveCircleRadius;
 			}
-			else if (name == "TerrainPath")
+			else if (name == "Terrain")
 			{
-				l_strSrc >> terrainPath.Height >> terrainPath.Color >> terrainPath.Normal;
-			}
-			else if (name == "TerrainWidth")
-			{
-				l_strSrc >> terrainWidth;
-			}
-			else if (name == "TerrainDepth")
-			{
-				l_strSrc >> terrainDepth;
-			}
-			else if (name == "TerrainHeight")
-			{
-				l_strSrc >> terrainHeight;
+				l_strSrc >> terrainInfo.Width >> terrainInfo.Height >> terrainInfo.Depth >>
+					terrainInfo.HeightMap >> terrainInfo.ColorMap >> terrainInfo.NormalMap >> terrainInfo.SpinSpeed;
 			}
 			else
 			{				
 				// Parameter not recognized
-				cerr << "wrong parameter: " << name << endl;
+				cerr << "Unknown parameter " << name << endl;
 			}
 			if (l_strSrc.fail() && !l_strSrc.eof()) {
 				// Reading error
@@ -144,12 +100,8 @@ void ConfigParser::Load(string filename)
 
 #pragma region Constructors & Destructors
 
-ConfigParser::ConfigParser()
-{
-}
+ConfigParser::ConfigParser(){ }
 
-ConfigParser::~ConfigParser()
-{
-}
+ConfigParser::~ConfigParser(){ }
 
 #pragma endregion
