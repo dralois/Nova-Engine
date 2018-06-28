@@ -114,6 +114,8 @@ void SpriteRenderer::destroy()
 	for (auto it = m_pSpriteSRV.begin(); it != m_pSpriteSRV.end(); it++) {
 		SAFE_RELEASE(*(it._Ptr));
 	}
+	// Clear the vector out
+	m_pSpriteSRV.clear();
 }
 
 void SpriteRenderer::renderSprites(ID3D11DeviceContext * context, 
