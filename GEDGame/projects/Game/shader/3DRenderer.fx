@@ -2,12 +2,12 @@
 // Shader resources
 //--------------------------------------------------------------------------------------
 
-Buffer<float>   g_HeightMap; // Buffer for height values
-Texture2D       g_Diffuse; // Material albedo for diffuse lighting
-Texture2D       g_NormalMap; // Normalmap for lighting
-Texture2D       g_Specular; // Specular texture
-Texture2D       g_Glow; // Glow texture
-
+Buffer<float>   g_HeightMap;    // Buffer for height values
+Texture2D       g_Diffuse;      // Material albedo for diffuse lighting
+Texture2D       g_NormalMap;    // Normalmap for lighting
+Texture2D       g_Specular;     // Specular texture
+Texture2D       g_Glow;         // Glow texture
+Texture2D       g_Depth;        // Depth buffer as texture
 
 //--------------------------------------------------------------------------------------
 // Constant buffers
@@ -15,8 +15,9 @@ Texture2D       g_Glow; // Glow texture
 
 cbuffer cbConstant
 {
-    float4  g_LightDir; // Object space
-	int		g_TerrainRes; // Resolution
+    float4  g_LightDir;     // Direction in world space
+    float   g_FarPlaneDist; // Far plane distance as float
+	int		g_TerrainRes;   // Resolution
 };
 
 cbuffer cbChangesEveryFrame
@@ -25,54 +26,49 @@ cbuffer cbChangesEveryFrame
 	matrix	g_WorldNormals;
     matrix  g_World;
     float4  g_CameraPos;
-    float  g_Time;
+    float   g_ShieldRadius;
 };
-
-cbuffer cbUserChanges
-{
-};
-
 
 //--------------------------------------------------------------------------------------
-// Structs
+// Input / output layout structs
 //--------------------------------------------------------------------------------------
 
-struct PosNorTex
-{
-    float4 Pos : SV_POSITION;
-    float4 Nor : NORMAL;
-    float2 Tex : TEXCOORD;
-};
-
-struct PosTexLi
+struct TerrainVertexPSIn
 {
     float4 Pos : SV_POSITION;
     float2 Tex : TEXCOORD;
-    float   Li : LIGHT_INTENSITY;
-	float3 normal: NORMAL;
 };
 
-struct PosTex 
+struct ShieldVertexVSIn 
 {
-	float4 Pos : SV_POSITION;
-	float2 Tex : TEXCOORD;
+	float4 Pos : POSITION;  // Position in world space
+	float2 Tex : TEXCOORD;  // Texture coordinate
+};
+
+struct ShieldVertexPSIn
+{
+    float4 Pos : SV_POSITION;
+    float3 Nor : NORMAL;
+    float2 Tex : TEXCOORD;
+    float Depth : DEPTH;
+    float3 PosWorld : POSITION;
 };
 
 struct T3dVertexVSIn
 {
-    float3 Pos : POSITION; // Position in object space
-    float2 Tex : TEXCOORD; // Texture coordinate
-    float3 Nor : NORMAL; // Normal in object space
-    float3 Tan : TANGENT; // Tangent in object space
+    float3 Pos : POSITION;  // Position in object space
+    float2 Tex : TEXCOORD;  // Texture coordinate
+    float3 Nor : NORMAL;    // Normal in object space
+    float3 Tan : TANGENT;   // Tangent in object space
 };
 
 struct T3dVertexPSIn
 {
-    float4 Pos : SV_POSITION; // Position in clip space
-    float2 Tex : TEXCOORD; // Texture coordinate
+    float4 Pos : SV_POSITION;   // Position in clip space
+    float2 Tex : TEXCOORD;      // Texture coordinate
     float3 PosWorld : POSITION; // Position in world space
-    float3 NorWorld : NORMAL; // Normal in world space
-    float3 TanWorld : TANGENT; // Tangent in world space
+    float3 NorWorld : NORMAL;   // Normal in world space
+    float3 TanWorld : TANGENT;  // Tangent in world space
 };
 
 //--------------------------------------------------------------------------------------
@@ -97,9 +93,6 @@ SamplerState samLinearClamp
 // Rasterizer states
 //--------------------------------------------------------------------------------------
 
-RasterizerState rsDefault {
-};
-
 RasterizerState rsCullFront {
     CullMode = Front;
 };
@@ -112,15 +105,10 @@ RasterizerState rsCullNone {
 	CullMode = None; 
 };
 
-RasterizerState rsLineAA {
-	CullMode = None; 
-	AntialiasedLineEnable = true;
-};
-
-
 //--------------------------------------------------------------------------------------
 // DepthStates
 //--------------------------------------------------------------------------------------
+
 DepthStencilState EnableDepth
 {
     DepthEnable = TRUE;
@@ -134,14 +122,22 @@ BlendState NoBlending
     BlendEnable[0] = FALSE;
 };
 
+BlendState BSBlendShield
+{
+    BlendEnable[0] = TRUE;
+    SrcBlend[0] = SRC_ALPHA;
+    SrcBlendAlpha[0] = SRC_ALPHA;
+    DestBlend[0] = ONE;
+    DestBlendAlpha[0] = SRC_ALPHA;
+};
 
 //--------------------------------------------------------------------------------------
 // Shaders
 //--------------------------------------------------------------------------------------
 
-PosTex TerrainVS(uint vertexID : SV_VertexID)
+TerrainVertexPSIn TerrainVS(uint vertexID : SV_VertexID)
 {
-    PosTex output = (PosTex) 0;
+    TerrainVertexPSIn output = (TerrainVertexPSIn) 0;
 	// Calc xz so the center is at (0/0/0) (also set w part to 1)
     output.Pos.xzw = float3(((vertexID % g_TerrainRes) / (float) g_TerrainRes) - 0.5f,
                             ((vertexID / g_TerrainRes) / (float) g_TerrainRes) - 0.5f, 1.0f);
@@ -156,7 +152,7 @@ PosTex TerrainVS(uint vertexID : SV_VertexID)
     return output;
 }
 
-float4 TerrainPS(PosTex Input) : SV_Target0
+float4 TerrainPS(TerrainVertexPSIn Input) : SV_Target0
 {
     float3 n;
     // Restore normal xz value (stored in xy in the normalmap)
@@ -218,12 +214,56 @@ float4 MeshPS(T3dVertexPSIn Input) : SV_Target0
             cg * matGlow);
 }
 
+// Shield vertex shader
+ShieldVertexPSIn ShieldVS(ShieldVertexVSIn Input)
+{
+    ShieldVertexPSIn output = (ShieldVertexPSIn) 0;
+    // Calculate the position in regards to shield radius
+    output.Pos = mul(float4(mul(Input.Pos.xyz, g_ShieldRadius), 1), g_WorldViewProjection);
+    // Normal is simply the input vertex position
+    output.Nor = normalize(mul(float4(Input.Pos.xyz, 0), g_WorldNormals).xyz);    
+    // Calculate screen position
+    output.Tex = ((output.Pos.xy / output.Pos.w) + 1.0F) / 2.0F;
+    // Calculate depth
+    output.Depth = output.Pos.z / output.Pos.w;
+    // Calculate world position as well
+    output.PosWorld = mul(float4(mul(Input.Pos.xyz, g_ShieldRadius), 1), g_World).xyz;
+    // Pass to vertex shader
+    return output;
+}
+
+// Shield pixel shader
+float4 ShieldPS(ShieldVertexPSIn Input) : SV_Target0
+{
+    // Load depth from texture
+    float currDepth = g_Depth.Load(int3(Input.Pos.xy, 0)).r;
+    // Calculate difference
+    float depthDiff = currDepth - Input.Depth;
+    float intersect = 0;
+    // If difference is positive
+    if (depthDiff > 0)
+    {
+        // Intersection strength
+        intersect = 1 - smoothstep(0, (1.0f / g_FarPlaneDist), depthDiff);
+    }
+    // Calculate view direction
+    float3 viewDir = normalize(g_CameraPos.xyz - Input.PosWorld);
+    // Calculate rim strength
+    float rim = 1 - abs(dot(Input.Nor, viewDir));
+    // Select maximum of both
+    float glow = max(intersect, rim);
+    // Return smoothed blue outline
+    return lerp(float4(0, 0, 0, 0), float4(0, 0, 1, 1), pow(glow, 4));
+
+}
+
 //--------------------------------------------------------------------------------------
 // Techniques
 //--------------------------------------------------------------------------------------
 technique11 Render
 {
-    pass P0
+    // Terrain pass
+    pass P0_Terrain
     {
         SetVertexShader(CompileShader(vs_4_0, TerrainVS()));
         SetGeometryShader(NULL);
@@ -243,5 +283,16 @@ technique11 Render
         SetRasterizerState(rsCullBack);
         SetDepthStencilState(EnableDepth, 0);
         SetBlendState(NoBlending, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
+    }
+    // Shield pass
+    pass P2_Shield
+    {
+        SetVertexShader(CompileShader(vs_4_0, ShieldVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0, ShieldPS()));
+
+        SetRasterizerState(rsCullNone);
+        SetDepthStencilState(EnableDepth, 0);
+        SetBlendState(BSBlendShield, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
     }
 }

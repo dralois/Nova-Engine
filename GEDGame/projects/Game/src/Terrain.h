@@ -1,15 +1,24 @@
 #pragma once
 
 #include "DXUT.h"
+#include "DirectXTex.h"
 #include "d3dx11effect.h"
+#include <DDSTextureLoader.h>
+
 #include "ConfigParser.h"
+#include "GameEffect.h"
+#include "SimpleImage.h"
+#include "Util.cpp"
+
+#include "debug.h"
 
 class Terrain
 {
 public:
 	
 	//Struct for vertices
-	struct SimpleVertex {
+	struct SimpleVertex
+	{
 		DirectX::XMFLOAT4 Pos;
 		DirectX::XMFLOAT4 Normal;
 		DirectX::XMFLOAT2 UV;
@@ -30,8 +39,8 @@ public:
 private:
 
 	// Configuration
-	ConfigParser configParser;
 	int iResolution;
+	ConfigParser configParser;
 
 	// Heightfield
 	vector<float> dHeightfield;

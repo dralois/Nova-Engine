@@ -2,23 +2,15 @@
 
 using namespace DirectX;
 
-// Convenience macros for safe effect variable retrieval
-#define SAFE_GET_PASS(Technique, name, var)   {assert(Technique!=NULL); var = Technique->GetPassByName( name );						assert(var->IsValid());}
-#define SAFE_GET_TECHNIQUE(effect, name, var) {assert(effect!=NULL); var = effect->GetTechniqueByName( name );						assert(var->IsValid());}
-#define SAFE_GET_SCALAR(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsScalar();			assert(var->IsValid());}
-#define SAFE_GET_VECTOR(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsVector();			assert(var->IsValid());}
-#define SAFE_GET_MATRIX(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsMatrix();			assert(var->IsValid());}
-#define SAFE_GET_SAMPLER(effect, name, var)   {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsSampler();			assert(var->IsValid());}
-#define SAFE_GET_RESOURCE(effect, name, var)  {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsShaderResource();	assert(var->IsValid());}
+#define MAXSPRITES 1024
 
 #pragma region Procedures
 
-// Converts string to wchar_t pointer (use with caution, don't forget to delete)
-wchar_t * strToWChar_t(std::string input) {
-	wchar_t * output = new wchar_t[input.length() + 1];
-	size_t out;
-	mbstowcs_s(&out, output, input.length() + 1, input.c_str(), input.length());
-	return output;
+int SpriteRenderer::getSpriteID(const string & spriteName)
+{
+	// Return index or null
+	auto l_Found = m_dicSpriteIDs.find(spriteName);
+	return l_Found != m_dicSpriteIDs.end() ? l_Found->second : 0;
 }
 
 HRESULT SpriteRenderer::reloadShader(ID3D11Device * pDevice)
@@ -27,7 +19,7 @@ HRESULT SpriteRenderer::reloadShader(ID3D11Device * pDevice)
 	WCHAR path[MAX_PATH];
 
 	// Find and load the rendering effect
-	V_RETURN(DXUTFindDXSDKMediaFileCch(path, MAX_PATH, L"shader\\SpriteRenderer.fxo"));
+	V_RETURN(DXUTFindDXSDKMediaFileCch(path, MAX_PATH, L"shader\\2DSpriteRenderer.fxo"));
 	std::ifstream is(path, std::ios_base::binary);
 	is.seekg(0, std::ios_base::end);
 	std::streampos pos = is.tellg();
@@ -65,7 +57,7 @@ HRESULT SpriteRenderer::create(ID3D11Device * pDevice)
 	bd.CPUAccessFlags = 0;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.ByteWidth = sizeof(SpriteVertex) * 1024;
+	bd.ByteWidth = sizeof(SpriteVertex) * MAXSPRITES;
 
 	// Create vertex buffer
 	V(pDevice->CreateBuffer(&bd, NULL, &m_pVertexBuffer));
@@ -92,12 +84,17 @@ HRESULT SpriteRenderer::create(ID3D11Device * pDevice)
 	V_RETURN(pDevice->CreateInputLayout(layout, numElements, pd.pIAInputSignature,
 		pd.IAInputSignatureSize, &m_pInputLayout));
 
+	// Save sprites locally
+	map<string, ConfigParser::SpriteTexture> l_Sprites = m_configParser.GetSpriteTextures();
+	int l_iCount = 0;
+
 	// Create the textures
-	for (auto it = m_textureFilenames.begin(); it != m_textureFilenames.end(); it++) {
+	for (auto it = l_Sprites.begin(); it != l_Sprites.end(); it++) {
 		ID3D11ShaderResourceView * nextView;
-		wchar_t * asWChar = strToWChar_t(it->data());
+		wchar_t * asWChar = Util::strToWChar_t(m_configParser.GetResourceFolder() + it->second.FilePath);
 		V_RETURN(DirectX::CreateDDSTextureFromFile(pDevice, asWChar, nullptr, &nextView));
 		m_pSpriteSRV.push_back(nextView);
+		m_dicSpriteIDs[it->first] = l_iCount++;
 		delete asWChar;
 	}
 
@@ -111,15 +108,17 @@ void SpriteRenderer::destroy()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pEffect);
+	// Erase the SRVs
 	for (auto it = m_pSpriteSRV.begin(); it != m_pSpriteSRV.end(); it++) {
 		SAFE_RELEASE(*(it._Ptr));
 	}
 	// Clear the vector out
 	m_pSpriteSRV.clear();
+	m_dicSpriteIDs.clear();
 }
 
-void SpriteRenderer::renderSprites(ID3D11DeviceContext * context, 
-	const std::vector<SpriteVertex>& sprites, const CFirstPersonCamera & camera)
+void SpriteRenderer::renderSprites(ID3D11DeviceContext* context, 
+	const std::vector<SpriteVertex>& sprites, const CFirstPersonCamera& camera)
 {
 	HRESULT hr;
 
@@ -141,8 +140,8 @@ void SpriteRenderer::renderSprites(ID3D11DeviceContext * context,
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	context->IASetInputLayout(m_pInputLayout);
 
-	ID3DX11EffectPass * pass;
-	ID3DX11EffectTechnique * technique;
+	ID3DX11EffectPass*  pass;
+	ID3DX11EffectTechnique* technique;
 
 	// Optain the pass
 	SAFE_GET_TECHNIQUE(m_pEffect, "Render", technique);
@@ -170,12 +169,11 @@ void SpriteRenderer::renderSprites(ID3D11DeviceContext * context,
 
 #pragma region Constructors & Destructors
 
-SpriteRenderer::SpriteRenderer(const std::vector<std::string>& textureFilenames) : 
-	m_textureFilenames(textureFilenames),
+SpriteRenderer::SpriteRenderer(const ConfigParser parser) : 
+	m_configParser(parser),
 	m_pVertexBuffer(nullptr),
 	m_pInputLayout(nullptr),
-	m_pEffect(nullptr),
-	m_spriteCountMax(0)
+	m_pEffect(nullptr)
 {
 }
 

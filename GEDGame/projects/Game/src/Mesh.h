@@ -36,8 +36,7 @@ public:
 	void destroy();
 
 	// Creates an input layout which is used for meshes
-	static HRESULT createInputLayout(ID3D11Device* device, 
-		ID3DX11EffectPass* pass);
+	static HRESULT createInputLayout(ID3D11Device* device, ID3DX11EffectPass* pass);
 
 	// Releases the input layout
 	static void destroyInputLayout();

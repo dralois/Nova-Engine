@@ -25,6 +25,7 @@
 #include "d3dx11effect.h"
 
 #include "Mesh.h"
+#include "Shield.h"
 #include "Terrain.h"
 #include "GameEffect.h"
 #include "ConfigParser.h"
@@ -32,15 +33,32 @@
 
 #include "debug.h"
 
-// Help macros
 #define DEG2RAD( a ) ( (a) * XM_PI / 180.f )
+
+#define PROJECTILELIFETIME 10.0f
 
 using namespace std;
 using namespace DirectX;
 
 //--------------------------------------------------------------------------------------
-// Global variables
+// Structs
 //--------------------------------------------------------------------------------------
+
+// Gun info
+struct GunInstance {
+	bool IsFiring;
+	float CooldownLeft;
+	ConfigParser::GunType Type;
+};
+
+// Projectile info
+struct Projectile {
+	SpriteVertex Particle;
+	XMVECTOR Velocity;
+	XMVECTOR Gravity;
+	float LifeTime;
+	int Damage;
+};
 
 // Enemy instance info
 struct EnemyInstance {
@@ -48,6 +66,8 @@ struct EnemyInstance {
 	XMVECTOR Position;
 	XMVECTOR Velocity;
 	int Hitpoints;
+	float Radius;
+	float Scale;
 };
 
 // Camera
@@ -56,7 +76,12 @@ struct CAMERAPARAMS {
 	float   aspect;
 	float   nearPlane;
 	float   farPlane;
-}                                       g_cameraParams;
+}										g_cameraParams;
+
+//--------------------------------------------------------------------------------------
+// Global variables
+//--------------------------------------------------------------------------------------
+
 float                                   g_cameraMoveScaler = 1000.f;
 float                                   g_cameraRotateScaler = 0.01f;
 CFirstPersonCamera                      g_camera;               // A first person camera
@@ -83,6 +108,7 @@ ConfigParser							g_configParser;
 
 // Meshes
 map<string, Mesh*>						g_Meshes;
+Shield									g_EnemyShield;
 bool									g_enableCameraFly = false;
 
 // Enemies
@@ -90,7 +116,11 @@ list<EnemyInstance>						g_enemyInstances;
 float									g_spawnTimer = 0.0f;
 
 // Sprite renderer
-SpriteRenderer *						g_spriteRenderer;
+SpriteRenderer*							g_spriteRenderer;
+
+// Guns
+vector<GunInstance>						g_Guns;
+list<Projectile>						g_Projectiles;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -166,7 +196,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	DXUTMainLoop(); // Enter into the DXUT render loop
 
-					// Shutdown the app
+	// Shutdown the app
 	DXUTShutdown();
 	DeinitApp();
 
@@ -191,26 +221,32 @@ void InitApp()
 	// Seed generator
 	srand(time(NULL));
 
-	// Save locally
+	// Save configs locally
 	map <string, ConfigParser::Mesh> l_Meshes = g_configParser.GetMeshes();
 
 	// Load the meshes	
 	for (auto it = l_Meshes.begin(); it != l_Meshes.end(); it++) {
 		ConfigParser::Mesh l_Mesh = it->second;
-		g_Meshes[it->first] = new Mesh("resources\\" + l_Mesh.File, "resources\\" + l_Mesh.Diffuse,
-			"resources\\" + l_Mesh.Specular, "resources\\" + l_Mesh.Glow);
+		g_Meshes[it->first] = new Mesh(g_configParser.GetResourceFolder() + l_Mesh.File, g_configParser.GetResourceFolder() + l_Mesh.Diffuse,
+			g_configParser.GetResourceFolder() + l_Mesh.Specular, g_configParser.GetResourceFolder() + l_Mesh.Glow);
 	}
 
-	// Store paths to sprites (will be improved in assg. 10)
-	vector<string> sprites;
-	sprites.push_back("resources\\parTrailPlasmaDiffuse.dds");
-	sprites.push_back("resources\\parTrailGatlingDiffuse.dds");
-
 	// Initialize the sprite renderer
-	g_spriteRenderer = new SpriteRenderer(sprites);
+	g_spriteRenderer = new SpriteRenderer(g_configParser);
+
+	// Initialize the guns
+	map <string, ConfigParser::GunType> l_Guns = g_configParser.GetGunTypes();
+
+	// Save them in the vector
+	for (auto it = l_Guns.begin(); it != l_Guns.end(); it++) {
+		GunInstance l_New;
+		l_New.CooldownLeft = 0;
+		l_New.IsFiring = false;
+		l_New.Type = it->second;
+		g_Guns.push_back(l_New);
+	}
 
 	// Intialize the user interface
-
 	g_settingsDlg.Init(&g_dialogResourceManager);
 	g_hud.Init(&g_dialogResourceManager);
 	g_sampleUI.Init(&g_dialogResourceManager);
@@ -232,7 +268,8 @@ void InitApp()
 //--------------------------------------------------------------------------------------
 // Deletes everything before shutdown
 //--------------------------------------------------------------------------------------
-void DeinitApp() {
+void DeinitApp()
+{
 	// Delete all meshes
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
 		SAFE_DELETE(it->second);
@@ -260,8 +297,8 @@ void RenderText()
 //--------------------------------------------------------------------------------------
 // Reject any D3D11 devices that aren't acceptable by returning false
 //--------------------------------------------------------------------------------------
-bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo *, UINT, const CD3D11EnumDeviceInfo *,
-	DXGI_FORMAT, bool, void*)
+bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo *, UINT,
+	const CD3D11EnumDeviceInfo *, DXGI_FORMAT, bool, void*)
 {
 	return true;
 }
@@ -323,13 +360,17 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	// Adjust camera spinning
 	g_terrainSpinning = fabs(g_configParser.GetTerrainInfo().SpinSpeed) > 0.0f;
 
-	// Create input layout
-	V_RETURN(Mesh::createInputLayout(pd3dDevice, g_gameEffect.meshPass1));
+	// Create input layouts
+	V_RETURN(Mesh::createInputLayout(pd3dDevice, g_gameEffect.g_pMeshPass1));
+	V_RETURN(Shield::createInputLayout(pd3dDevice, g_gameEffect.g_pShieldPass2));
 
 	// Create the meshes
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
 		V_RETURN(it->second->create(pd3dDevice));
 	}
+
+	// Create the shield
+	V_RETURN(g_EnemyShield.create(pd3dDevice, 10));
 
 	// Create sprite renderer resources
 	V_RETURN(g_spriteRenderer->create(pd3dDevice));
@@ -349,16 +390,21 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	g_settingsDlg.OnD3D11DestroyDevice();
 	DXUTGetGlobalResourceCache().OnDestroyDevice();
 
+	// Destroy input layouts etc.
+	Mesh::destroyInputLayout();
+	Shield::destroyInputLayout();
+	Shield::destroyDepthBuffer();
+
 	// Destroy the terrain
 	g_terrain.destroy();
-
-	// Destroy input layout
-	Mesh::destroyInputLayout();
 
 	// Destroy meshes
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
 		it->second->destroy();
 	}
+
+	// Destroy shield renderer
+	g_EnemyShield.destroy();
 
 	// Destroy sprite renderer
 	g_spriteRenderer->destroy();
@@ -378,18 +424,20 @@ HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, IDXGISwapChai
 
 	HRESULT hr;
 
-	// Intialize the user interface
-
 	V_RETURN(g_dialogResourceManager.OnD3D11ResizedSwapChain(pd3dDevice, pBackBufferSurfaceDesc));
-	V_RETURN(g_settingsDlg.OnD3D11ResizedSwapChain(pd3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(g_settingsDlg.OnD3D11ResizedSwapChain(pd3dDevice, pBackBufferSurfaceDesc))
 
+	// Intialize the user interface
 	g_hud.SetLocation(pBackBufferSurfaceDesc->Width - 170, 0);
 	g_hud.SetSize(170, 170);
 	g_sampleUI.SetLocation(pBackBufferSurfaceDesc->Width - 170, pBackBufferSurfaceDesc->Height - 300);
 	g_sampleUI.SetSize(170, 300);
 
-	// Initialize the camera
+	// Update depth buffer
+	Shield::destroyDepthBuffer();	
+	Shield::createDepthBuffer(pd3dDevice, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
 
+	// Initialize the camera
 	g_cameraParams.aspect = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
 	g_cameraParams.fovy = 0.785398f;
 	g_cameraParams.nearPlane = 1.f;
@@ -495,10 +543,18 @@ void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserCo
 	UNREFERENCED_PARAMETER(bKeyDown);
 	UNREFERENCED_PARAMETER(bAltDown);
 	UNREFERENCED_PARAMETER(pUserContext);
+
 	// Reenable camera movement for debug purposes
 	if (nChar == 'C' && bKeyDown) {
 		g_enableCameraFly = !g_enableCameraFly;
 		g_camera.SetEnablePositionMovement(g_enableCameraFly);
+	}
+
+	// Loop guns and update firing bool
+	for (auto it = g_Guns.begin(); it != g_Guns.end(); it++) {
+		if (nChar == it->Type.Hotkey) {
+			it->IsFiring = bKeyDown;
+		}
 	}
 }
 
@@ -560,6 +616,10 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		g_terrainWorld *= XMMatrixRotationY(30.0f * DEG2RAD((float)fTime)); // Rotate around world-space "up" axis
 	}
 
+	//--------------------------------------------------------------------------------------
+	// Enemy spawning
+	//--------------------------------------------------------------------------------------
+
 	// Update timer
 	g_spawnTimer -= fElapsedTime;
 
@@ -588,23 +648,29 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			g_configParser.GetSpawnInfo().InnerCircleRadius * cos(alphaInner),
 			1);
 		// Create random enemy
-		EnemyInstance newEnemy;
+		EnemyInstance l_objNewEnemy;
 		// Get beginning of the map
 		map<string, ConfigParser::EnemyType> enemyTypes = g_configParser.GetEnemyTypes();
 		auto enemyIt = enemyTypes.begin();
-		// Move a random distance
+		// Move a random amount of positions
 		unsigned int distance = (unsigned int)((rand() * 1.0f / RAND_MAX) * g_configParser.GetEnemyTypes().size());		
 		advance(enemyIt, distance);
 		// Get the random type
 		ConfigParser::EnemyType randEnemy = enemyIt->second;
 		// Adjust new instance
-		newEnemy.Hitpoints = randEnemy.Hitpoints;
-		newEnemy.Identifier = randEnemy.Identifier;
-		newEnemy.Position = s1;
-		newEnemy.Velocity = randEnemy.Speed * XMVector4Normalize(s2 - s1);
+		l_objNewEnemy.Hitpoints = randEnemy.Hitpoints;
+		l_objNewEnemy.Identifier = randEnemy.Identifier;
+		l_objNewEnemy.Position = s1;
+		l_objNewEnemy.Velocity = randEnemy.Speed * XMVector4Normalize(s2 - s1);
+		l_objNewEnemy.Radius = randEnemy.Size;
+		l_objNewEnemy.Scale = randEnemy.Scale;		
 		// Store in the list
-		g_enemyInstances.push_back(newEnemy);
+		g_enemyInstances.push_back(l_objNewEnemy);
 	}
+
+	//--------------------------------------------------------------------------------------
+	// Enemy movement
+	//--------------------------------------------------------------------------------------
 
 	// Update enemy positions and remove if too far out
 	for (auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); )
@@ -616,9 +682,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		if (sqrtf(powf(x, 2) + powf(z, 2)) > g_configParser.GetSpawnInfo().RemoveCircleRadius)
 		{
 			// Safe remove element
-			auto toRemove = it;
-			it++;
-			g_enemyInstances.erase(toRemove);
+			it = g_enemyInstances.erase(it);
 		}
 		else
 		{
@@ -639,6 +703,100 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		}
 	}
 
+	//--------------------------------------------------------------------------------------
+	// Guns
+	//--------------------------------------------------------------------------------------
+
+	// Update cooldowns and fire guns
+	for (auto it = g_Guns.begin(); it != g_Guns.end(); it++) {
+		// Reduce cooldown left
+		if (it->CooldownLeft > 0) {
+			it->CooldownLeft -= fElapsedTime;
+		}
+		// If cooldown is zero and fire is pressed
+		else if (it->IsFiring && it->CooldownLeft <= 0) {
+			// Reset the timer
+			it->CooldownLeft = it->Type.FireRate;
+			// Spawn a projectile
+			Projectile l_objNewProj;
+			// Save in sprite vector
+			SpriteVertex l_objNewSprite;
+			// Current camera inverse
+			XMMATRIX l_cameraInverse = XMMatrixInverse(nullptr, g_camera.GetViewMatrix());
+			// Use it to calculate the spawn position
+			XMVECTOR l_vPos = XMVector3Transform(XMVectorSet(it->Type.TranslationX, 
+															it->Type.TranslationY, 
+															it->Type.TranslationZ, 1),
+												l_cameraInverse);
+			// Set projectile information
+			l_objNewProj.Velocity = XMVectorScale(XMVector4Normalize(g_camera.GetWorldAhead()), it->Type.ProjectileSpeed);
+			l_objNewProj.Gravity = XMVectorSet(0, it->Type.ParticleMass, 0, 0);
+			l_objNewProj.LifeTime = PROJECTILELIFETIME;
+			l_objNewProj.Damage = it->Type.Damage;
+			// Set particle information
+			l_objNewSprite.TextureIndex = g_spriteRenderer->getSpriteID(it->Type.SpriteName);
+			XMStoreFloat3(&l_objNewSprite.Position, l_vPos);
+			l_objNewSprite.Radius = it->Type.SpriteRadius;
+			l_objNewProj.Particle = l_objNewSprite;
+			// Save in vector
+			g_Projectiles.push_back(l_objNewProj);
+		}
+	}
+
+	// Update projectiles
+	for (auto it = g_Projectiles.begin(); it != g_Projectiles.end(); ) {
+		// Remove the ones that have exceeded their lifetime
+		if (it->LifeTime < 0) {
+			// Safe remove element
+			it = g_Projectiles.erase(it);
+		}
+		else {
+			// Update lifetime
+			it->LifeTime -= fElapsedTime;
+			// Subtract scaled gravity
+			it->Velocity = XMVectorSubtract(it->Velocity, XMVectorScale(it->Gravity, fElapsedTime));
+			// Update position afterwards based on velocity
+			XMFLOAT3* l_ParticlePos = &(it->Particle.Position);
+			XMVECTOR l_vPos = XMVectorAdd(XMVectorSet(l_ParticlePos->x, l_ParticlePos->y, l_ParticlePos->z, 1),
+											XMVectorScale(it->Velocity, fElapsedTime));
+			XMStoreFloat3(l_ParticlePos, l_vPos);
+			// Increment iterator
+			it++;
+		}
+	}
+	
+	//--------------------------------------------------------------------------------------
+	// Check for collisions
+	//--------------------------------------------------------------------------------------
+
+	// Loop enemies
+	for (auto enemy = g_enemyInstances.begin(); enemy != g_enemyInstances.end(); ) {
+		// Loop projectiles
+		for (auto proj = g_Projectiles.begin(); proj != g_Projectiles.end(); ) {
+			// Compare the distance between projectile and enemy against their bounding sphere radii
+			if (!XMVector4Greater(XMVector4Length(XMVectorSubtract(enemy->Position, XMLoadFloat3(&(proj->Particle.Position)))),
+												XMVectorSet((enemy->Radius * enemy->Scale) + proj->Particle.Radius, 
+															(enemy->Radius * enemy->Scale) + proj->Particle.Radius,
+															(enemy->Radius * enemy->Scale) + proj->Particle.Radius, 0))) {
+				// Apply damage
+				enemy->Hitpoints -= proj->Damage;
+				// Remove the projectile
+				proj = g_Projectiles.erase(proj);
+				// If damage hits zero remove enemy
+				if (enemy->Hitpoints <= 0) 
+					enemy = g_enemyInstances.erase(enemy);				
+			}
+			else {
+				// Just increment
+				proj++;
+			}
+		}
+		// Increment enemy
+		enemy++;
+	}
+
+	//--------------------------------------------------------------------------------------
+
 	// Set the light vector
 	g_lightDir = XMVectorSet(1, 1, 1, 0); // Direction to the directional light in world space    
 	g_lightDir = XMVector3Normalize(g_lightDir);
@@ -648,8 +806,8 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 //--------------------------------------------------------------------------------------
 // Render the scene using the D3D11 device
 //--------------------------------------------------------------------------------------
-void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, double fTime,
-	float fElapsedTime, void* pUserContext)
+void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, 
+	double fTime, float fElapsedTime, void* pUserContext)
 {
 	UNREFERENCED_PARAMETER(pd3dDevice);
 	UNREFERENCED_PARAMETER(fTime);
@@ -664,11 +822,13 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		return;
 	}
 
+	// Get RTV and clear with backcolor
 	ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
 	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	pd3dImmediateContext->ClearRenderTargetView(pRTV, clearColor);
 
-	if (g_gameEffect.effect == NULL) {
+	// Error handling
+	if (g_gameEffect.g_pEffect == NULL) {
 		g_txtHelper->Begin();
 		g_txtHelper->SetInsertionPos(5, 5);
 		g_txtHelper->SetForegroundColor(XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
@@ -677,26 +837,45 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		return;
 	}
 
-	// Clear the depth stencil
-	ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
-	pd3dImmediateContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0, 0);
+	// Depth buffer rendering first
+	pd3dImmediateContext->OMSetRenderTargets(0, 0, Shield::g_pDepthStencilView);
+	pd3dImmediateContext->ClearDepthStencilView(Shield::g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	//--------------------------------------------------------------------------------------
+	// Terrain
+	//--------------------------------------------------------------------------------------
 
 	// Update variables that change once per frame
-	XMMATRIX const view = g_camera.GetViewMatrix(); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
-	XMMATRIX const proj = g_camera.GetProjMatrix(); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb147302%28v=vs.85%29.aspx
-	XMMATRIX worldViewProj = g_terrainWorld * view * proj;
+	XMMATRIX worldViewProj = g_terrainWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();	
 	// Transpose and inverse the world matrix
 	XMMATRIX worldNormal = XMMatrixTranspose(XMMatrixInverse(nullptr, g_terrainWorld));
 
 	// Save in shader
-	V(g_gameEffect.worldEV->SetMatrix((float*)&g_terrainWorld));
-	V(g_gameEffect.worldViewProjectionEV->SetMatrix((float*)&worldViewProj));
-	V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&worldNormal));
-	V(g_gameEffect.lightDirEV->SetFloatVector((float*)&g_lightDir));
+	V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&g_terrainWorld));
+	V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&worldViewProj));
+	V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&worldNormal));
+	V(g_gameEffect.g_pLightDirVector->SetFloatVector((float*)&g_lightDir));
+	V(g_gameEffect.g_pFarPlaneDist->SetFloat(g_camera.GetFarClip()));
 
 	// Perform rendering
-	g_terrain.render(pd3dImmediateContext, g_gameEffect.pass0);
+	g_terrain.render(pd3dImmediateContext, g_gameEffect.g_pTerrainPass0);
 
+	// Clear the depth stencil and set rendertarget to "normal" camera
+	ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
+	pd3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDSV);
+	pd3dImmediateContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0, 0);
+
+	// Set depth texture
+	V(g_gameEffect.g_pDepthBuffer2D->SetResource(Shield::g_pDepthSRV));
+
+	// Perform rendering again
+	g_terrain.render(pd3dImmediateContext, g_gameEffect.g_pTerrainPass0);
+
+	//--------------------------------------------------------------------------------------
+	// Cockpit and ground objects
+	//--------------------------------------------------------------------------------------
+
+	// Save objects locally
 	vector<ConfigParser::RenderObject> renderObjs = g_configParser.GetRenderObjs();
 
 	// Loop over all the meshes to be rendered
@@ -718,15 +897,19 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
 
 		// Save in shader
-		V(g_gameEffect.worldEV->SetMatrix((float*)&mWorld));
-		V(g_gameEffect.worldViewProjectionEV->SetMatrix((float*)&mWorldViewProj));
-		V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_gameEffect.cameraPosWorldEV->SetFloatVector((float*)&mcameraPosWorld));
+		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
 
 		// Render the mesh accordingly
-		g_Meshes[it->Identifier]->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV,
-			g_gameEffect.specularEV, g_gameEffect.glowEV);
+		g_Meshes[it->Identifier]->render(pd3dImmediateContext, g_gameEffect.g_pMeshPass1, g_gameEffect.g_pDiffuseTexture2D,
+			g_gameEffect.g_pSpecularTexture2D, g_gameEffect.g_pGlowTexture2D);
 	}
+
+	//--------------------------------------------------------------------------------------
+	// Enemies
+	//--------------------------------------------------------------------------------------
 
 	// Loop over all the enemy instances
 	for(auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); it++)
@@ -751,27 +934,53 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		// Normals transformation matrix (inverse transposed of world)
 		XMMATRIX mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
 		// Store camera position
-		XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
+		XMVECTOR mCameraPosWorld = g_camera.GetEyePt();
 
 		// Save in shader
-		V(g_gameEffect.worldEV->SetMatrix((float*)&mWorld));
-		V(g_gameEffect.worldViewProjectionEV->SetMatrix((float*)&mWorldViewProj));
-		V(g_gameEffect.worldNormalsMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_gameEffect.cameraPosWorldEV->SetFloatVector((float*)&mcameraPosWorld));
+		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraPosWorld));
+		V(g_gameEffect.g_pShieldRadius->SetFloat(it->Radius));
 
 		// Render the enemy accordingly		
-		g_Meshes[enemyType.Mesh]->render(pd3dImmediateContext, g_gameEffect.meshPass1, g_gameEffect.diffuseEV,
-			g_gameEffect.specularEV, g_gameEffect.glowEV);
+		g_Meshes[enemyType.Mesh]->render(pd3dImmediateContext, g_gameEffect.g_pMeshPass1, g_gameEffect.g_pDiffuseTexture2D,
+			g_gameEffect.g_pSpecularTexture2D, g_gameEffect.g_pGlowTexture2D);
+
+		// Update the world matrix to also include the animation transform
+		mWorld *= mTransAnim;
+		mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
+		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+
+		// Render the shield around the enemy
+		g_EnemyShield.render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2);
 	}
 
-	// Create abitrary sprites
-	vector<SpriteVertex> sprites;
-	sprites.push_back({ XMFLOAT3(0, 400, 0), 10, 0 });
-	sprites.push_back({ XMFLOAT3(0, 400, 100), 20, 0 });
-	sprites.push_back({ XMFLOAT3(100, 400, 0), 5, 1 });
-
+	//--------------------------------------------------------------------------------------
 	// Render sprites last (transparent after opaque)
-	g_spriteRenderer->renderSprites(pd3dImmediateContext, sprites, g_camera);
+	//--------------------------------------------------------------------------------------
+
+	// If there are projectiles
+	if (!g_Projectiles.empty()) {
+		// Push sprites into a vector
+		vector<SpriteVertex> l_CurrSprites;
+		for (auto it : g_Projectiles) {
+			l_CurrSprites.push_back(it.Particle);
+		}
+		// Sort based on distance to camera
+		sort(l_CurrSprites.begin(), l_CurrSprites.end(), 
+			[](SpriteVertex i, SpriteVertex j)
+		{
+			return XMVector4Greater(XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&i.Position)), 
+									XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&j.Position))); 
+		});
+
+		// Render them
+		g_spriteRenderer->renderSprites(pd3dImmediateContext, l_CurrSprites, g_camera);
+	}
+
+	//--------------------------------------------------------------------------------------
 
 	DXUT_BeginPerfEvent(DXUT_PERFEVENTCOLOR, L"HUD / Stats");
 	V(g_hud.OnRender(fElapsedTime));

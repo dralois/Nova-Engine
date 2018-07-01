@@ -60,7 +60,7 @@ HRESULT Mesh::create(ID3D11Device* device)
 	V(T3d::readFromFile(filenameT3d.c_str(), vertexBufferData, indexBufferData));
 
 	id.pSysMem = &vertexBufferData[0];
-	id.SysMemPitch = sizeof(T3dVertex); // Stride
+	id.SysMemPitch = sizeof(T3dVertex);
     id.SysMemSlicePitch = 0;
 
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;

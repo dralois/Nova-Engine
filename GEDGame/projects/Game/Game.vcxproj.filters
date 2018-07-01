@@ -33,6 +33,9 @@
     <ClInclude Include="src\SpriteRenderer.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\Shield.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ConfigParser.cpp">
@@ -53,12 +56,18 @@
     <ClCompile Include="src\SpriteRenderer.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shield.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader\game.fx">
+    <FxCompile Include="shader\3DRenderer.fx">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="shader\SpriteRenderer.fx">
+    <FxCompile Include="shader\2DSpriteRenderer.fx">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

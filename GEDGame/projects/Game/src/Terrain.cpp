@@ -1,12 +1,5 @@
 #include "Terrain.h"
 
-#include "GameEffect.h"
-#include "SimpleImage.h"
-#include <DDSTextureLoader.h>
-#include "DirectXTex.h"
-
-#include "debug.h"
-
 // You can use this macro to access your height field
 #define IDX(X,Y,WIDTH) ((X) + (Y) * (WIDTH))
 
@@ -27,14 +20,6 @@ Terrain::~Terrain(void)
 {
 }
 
-// Converts string to wchar_t pointer (use with caution, don't forget to delete)
-wchar_t * strtowchar_t(string input) {
-	wchar_t * output = new wchar_t[input.length() + 1];
-	size_t out;
-	mbstowcs_s(&out, output, input.length() + 1, input.c_str(), input.length());
-	return output;
-}
-
 float Terrain::GetHeightAtXY(float pi_dX, float pi_dY)
 {
 	return dHeightfield[IDX((int)roundf((iResolution - 1) * pi_dX), (int)roundf((iResolution - 1) * pi_dY), iResolution)];
@@ -45,7 +30,7 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	HRESULT hr;
 
 	// Heightfield fetch
-	GEDUtils::SimpleImage heightfield(parser.GetTerrainInfo().HeightMap.insert(0,"resources\\").c_str());
+	GEDUtils::SimpleImage heightfield((parser.GetResourceFolder() + parser.GetTerrainInfo().HeightMap).c_str());
 
 	// Easy access
 	iResolution = heightfield.getWidth();
@@ -119,8 +104,8 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	device->CreateShaderResourceView(heightBuffer, &desc, &heightBufferSRV);
 
 	// Convert strings	
-	wchar_t * color =  strtowchar_t(parser.GetTerrainInfo().ColorMap.insert(0, "resources\\"));
-	wchar_t * normal = strtowchar_t(parser.GetTerrainInfo().NormalMap.insert(0, "resources\\"));
+	wchar_t * color =  Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().ColorMap).c_str());
+	wchar_t * normal = Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().NormalMap).c_str());
 
 	// Load color texture (color for terrain)
 	V(DirectX::CreateDDSTextureFromFile(device, color, nullptr, &diffuseTextureSRV));
@@ -163,21 +148,16 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
 
 	// Bind the index buffer to the input assembler stage
 	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
     // Tell the input assembler stage which primitive topology to use
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);    
 
-	// Bind the diffuse texture of the terrain
-	V(g_gameEffect.diffuseEV->SetResource(diffuseTextureSRV));
-
-	// Bind the normalmap
-	V(g_gameEffect.normalmap->SetResource(normalTextureSRV));
-
-	// Bind the heightmap
-	V(g_gameEffect.heightmap->SetResource(heightBufferSRV));
+	// Bind the various textures
+	V(g_gameEffect.g_pDiffuseTexture2D->SetResource(diffuseTextureSRV));
+	V(g_gameEffect.g_pTerrainNormalTexture2D->SetResource(normalTextureSRV));
+	V(g_gameEffect.g_pTerrainHeightTexture2D->SetResource(heightBufferSRV));
 
 	// Set the resolution
-	V(g_gameEffect.resolution->SetInt(iResolution));
+	V(g_gameEffect.g_pTerrainResolution->SetInt(iResolution));
 
     // Apply the rendering pass in order to submit the necessary render state changes to the device
     V(pass->Apply(0, context));

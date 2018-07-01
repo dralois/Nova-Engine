@@ -3,7 +3,7 @@
 //--------------------------------------------------------------------------------------
 
 int         g_TextureCount;
-Texture2D   g_SpriteTexture[10];
+Texture2D   g_SpriteTexture[2];
 
 cbuffer cbChangesEveryFrame
 {
@@ -25,7 +25,7 @@ struct SpriteVertex
 
 struct PSVertex
 {
-    float4 Position : SV_POSITIOn;
+    float4 Position : SV_POSITION;
     float2 TexCoords : TEXCOORD;
     int TextureIndex : TEXINDEX;
 };
@@ -67,7 +67,6 @@ DepthStencilState EnableDepth
     DepthWriteMask = ALL;
     DepthFunc = LESS_EQUAL;
 };
-
 
 BlendState BSBlendOver
 {

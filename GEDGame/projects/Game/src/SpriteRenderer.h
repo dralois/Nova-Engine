@@ -1,33 +1,41 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-
-#include <DXUT.h>
-#include <DXUTcamera.h>
-#include "SDKmisc.h"
-
 #include <fstream>
 #include <iostream>
 
+#include <DXUT.h>
+#include "SDKmisc.h"
+#include <DXUTcamera.h>
 #include <d3dx11effect.h>
 #include <DDSTextureLoader.h>
 
+#include "Util.cpp"
+#include "ConfigParser.h"
+#include "GameEffect.h"
+
+#include "debug.h"
+
 struct SpriteVertex
 {
-	DirectX::XMFLOAT3 position;     // world-space position (sprite center)
-	float radius;                   // world-space radius (= half side length of the sprite quad)
-	int textureIndex;               // which texture to use (out of SpriteRenderer::m_spriteSRV)
+	DirectX::XMFLOAT3 Position;     // world-space position (sprite center)
+	float Radius;                   // world-space radius (= half side length of the sprite quad)
+	int TextureIndex;               // which texture to use (out of SpriteRenderer::m_spriteSRV)
 };
 
 class SpriteRenderer
 {
 public:
-	// Constructor: Create a SpriteRenderer with the given list of textures.
+	// Constructor: Create a SpriteRenderer
 	// The textures are *not* be created immediately, but only when create is called!
-	SpriteRenderer(const std::vector<std::string>& textureFilenames);
+	SpriteRenderer(const ConfigParser parser);
 	// Destructor does nothing. Destroy and ReleaseShader must be called first!
 	~SpriteRenderer();
+
+	// Returns internal index to a sprite name
+	int getSpriteID(const string& spriteName);
 
 	// Load/reload the effect. Must be called once before create!
 	HRESULT reloadShader(ID3D11Device* pDevice);
@@ -41,14 +49,15 @@ public:
 	void destroy();
 
 	// Render the given sprites. They must already be sorted into back-to-front order.
-	void renderSprites(ID3D11DeviceContext* context, const std::vector<SpriteVertex>& sprites, const CFirstPersonCamera& camera);
+	void renderSprites(ID3D11DeviceContext* context, 
+		const std::vector<SpriteVertex>& sprites, const CFirstPersonCamera& camera);
 
 private:
-	// Vertex list
-	std::vector<std::string> m_textureFilenames;
+	// Contains sprite info and other necessary to know things
+	ConfigParser							m_configParser;
 
 	// Rendering effect (shaders and related GPU state). Created/released in Reload/ReleaseShader.
-	ID3DX11Effect* m_pEffect;
+	ID3DX11Effect*							m_pEffect;
 	
 	// Matrix for sprite correction
 	ID3DX11EffectMatrixVariable*			m_pViewProjectionMatrix;
@@ -60,11 +69,10 @@ private:
 	ID3DX11EffectShaderResourceVariable*    m_pSpriteTexture2D;
 
 	// Sprite textures and corresponding shader resource views.
-	std::vector<ID3D11ShaderResourceView*> m_pSpriteSRV;
+	std::vector<ID3D11ShaderResourceView*>	m_pSpriteSRV;
+	std::map<string, int>					m_dicSpriteIDs;
 
-	// Maximum number of allowed sprites, i.e. size of the vertex buffer.
-	size_t m_spriteCountMax;
 	// Vertex buffer for sprite vertices, and corresponding input layout.
-	ID3D11Buffer* m_pVertexBuffer;
-	ID3D11InputLayout* m_pInputLayout;
+	ID3D11Buffer*							m_pVertexBuffer;
+	ID3D11InputLayout*						m_pInputLayout;
 };

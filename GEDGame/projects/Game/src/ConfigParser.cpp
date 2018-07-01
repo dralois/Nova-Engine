@@ -7,6 +7,16 @@ vector<ConfigParser::RenderObject> ConfigParser::GetRenderObjs()
 	return renderObjs;
 }
 
+map<string, ConfigParser::GunType> ConfigParser::GetGunTypes()
+{
+	return gunDictionary;
+}
+
+map<string, ConfigParser::SpriteTexture> ConfigParser::GetSpriteTextures()
+{
+	return spriteDictionary;
+}
+
 map<string, ConfigParser::Mesh> ConfigParser::GetMeshes()
 {
 	return meshDictionary;
@@ -15,6 +25,16 @@ map<string, ConfigParser::Mesh> ConfigParser::GetMeshes()
 ConfigParser::SpawnInfo ConfigParser::GetSpawnInfo()
 {
 	return spawnInfo;
+}
+
+string ConfigParser::GetResourceFolder()
+{
+	return resourceFolder;
+}
+
+string ConfigParser::GetShaderFolder()
+{
+	return shaderFolder;
 }
 
 map<string, ConfigParser::EnemyType> ConfigParser::GetEnemyTypes()
@@ -62,6 +82,20 @@ void ConfigParser::Load(string filename)
 					newObj.RotationZ >> newObj.TranslationX >> newObj.TranslationY >> newObj.TranslationZ;
 				renderObjs.push_back(newObj);
 			}
+			else if (name == "Sprite")
+			{
+				l_strSrc >> name;
+				spriteDictionary[name].Identifier = name;
+				l_strSrc >> spriteDictionary[name].FilePath;
+			}
+			else if (name == "GunType")
+			{
+				l_strSrc >> name;
+				gunDictionary[name].Identifier = name;
+				l_strSrc >> gunDictionary[name].ProjectileSpeed >> gunDictionary[name].ParticleMass >> gunDictionary[name].FireRate >>
+					gunDictionary[name].Damage >> gunDictionary[name].Hotkey >> gunDictionary[name].SpriteName >> gunDictionary[name].SpriteRadius >>
+					gunDictionary[name].TranslationX >> gunDictionary[name].TranslationY >> gunDictionary[name].TranslationZ;
+			}
 			else if (name == "EnemyType")
 			{
 				l_strSrc >> name;
@@ -80,6 +114,14 @@ void ConfigParser::Load(string filename)
 			{
 				l_strSrc >> terrainInfo.Width >> terrainInfo.Height >> terrainInfo.Depth >>
 					terrainInfo.HeightMap >> terrainInfo.ColorMap >> terrainInfo.NormalMap >> terrainInfo.SpinSpeed;
+			}
+			else if (name == "ResourceFolder")
+			{
+				l_strSrc >> resourceFolder;
+			}
+			else if (name == "ShaderFolder")
+			{
+				l_strSrc >> shaderFolder;
 			}
 			else
 			{				

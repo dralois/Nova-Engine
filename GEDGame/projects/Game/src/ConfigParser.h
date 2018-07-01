@@ -40,7 +40,8 @@ public:
 	};
 
 	// Saves enemy information
-	struct EnemyType {
+	struct EnemyType
+	{
 		string Identifier;
 		int Hitpoints;
 		float Size;
@@ -53,6 +54,29 @@ public:
 		float TranslationX;
 		float TranslationY;
 		float TranslationZ;
+	};
+
+	// Contains info about a gun
+	struct GunType
+	{
+		string Identifier;
+		float ProjectileSpeed;
+		float ParticleMass;
+		float FireRate;
+		int Damage;
+		char Hotkey;
+		string SpriteName;
+		float SpriteRadius;
+		float TranslationX;
+		float TranslationY;
+		float TranslationZ;
+	};
+
+	// Contains a sprite texture info
+	struct SpriteTexture
+	{
+		string Identifier;
+		string FilePath;
 	};
 
 	// Stores terrain information
@@ -68,7 +92,8 @@ public:
 	};
 
 	// Stores spawn info
-	struct SpawnInfo {
+	struct SpawnInfo
+	{
 		float Interval;
 		float MinHeight;
 		float MaxHeight;
@@ -79,11 +104,15 @@ public:
 
 #pragma region Properties
 
+	map<string, SpriteTexture> GetSpriteTextures();
 	map<string, EnemyType> GetEnemyTypes();
 	vector<RenderObject> GetRenderObjs();
+	map<string, GunType> GetGunTypes();
 	map<string, Mesh> GetMeshes();
 	TerrainInfo GetTerrainInfo();
 	SpawnInfo GetSpawnInfo();
+	string GetResourceFolder();
+	string GetShaderFolder();
 
 #pragma endregion
 
@@ -93,9 +122,13 @@ public:
 
 private:
 
+	map<string, SpriteTexture> spriteDictionary;
 	map<string, EnemyType> enemyDictionary;
+	map<string, GunType> gunDictionary;
 	map<string, Mesh> meshDictionary;
 	vector<RenderObject> renderObjs;
 	TerrainInfo terrainInfo;
 	SpawnInfo spawnInfo;
+	string resourceFolder;
+	string shaderFolder;
 };
