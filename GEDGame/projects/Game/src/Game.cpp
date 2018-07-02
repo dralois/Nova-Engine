@@ -693,10 +693,11 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			z /= g_configParser.GetTerrainInfo().Depth;
 			// Only if in terrain..
 			if (x >= 0.0f && x <= 1.0f && z >= 0.0f && z <= 1.0f) {
-				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height;
+				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height * 1.1;
 				// Adjust position accordingly
 				if(y > XMVectorGetY(it->Position))
-					it->Position = XMVectorSetY(it->Position, y);			
+					// Lerp to avoid jumping movement
+					it->Position = XMVectorLerp(it->Position, XMVectorSetY(it->Position, y), 0.1);			
 			}
 			// Increase iterator
 			it++;
@@ -791,14 +792,15 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 				proj++;
 			}
 		}
-		// Increment enemy
-		enemy++;
+		// Increment enemy if the end isn't reached yet
+		if(enemy != g_enemyInstances.end())
+			enemy++;
 	}
 
 	//--------------------------------------------------------------------------------------
 
 	// Set the light vector
-	g_lightDir = XMVectorSet(1, 1, 1, 0); // Direction to the directional light in world space    
+	g_lightDir = XMVectorSet(1, 1, 1, 0);    
 	g_lightDir = XMVector3Normalize(g_lightDir);
 }
 
@@ -860,12 +862,12 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	// Perform rendering
 	g_terrain.render(pd3dImmediateContext, g_gameEffect.g_pTerrainPass0);
 
-	// Clear the depth stencil and set rendertarget to "normal" camera
+	// Clear the depth stencil and set the normal view
 	ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
 	pd3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDSV);
 	pd3dImmediateContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0, 0);
 
-	// Set depth texture
+	// Set the depth texture
 	V(g_gameEffect.g_pDepthBuffer2D->SetResource(Shield::g_pDepthSRV));
 
 	// Perform rendering again
@@ -935,6 +937,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMMATRIX mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
 		// Store camera position
 		XMVECTOR mCameraPosWorld = g_camera.GetEyePt();
+		XMVECTOR mCameraLookDir = g_camera.GetLookAtPt();
 
 		// Save in shader
 		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
@@ -948,10 +951,8 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 			g_gameEffect.g_pSpecularTexture2D, g_gameEffect.g_pGlowTexture2D);
 
 		// Update the world matrix to also include the animation transform
-		mWorld *= mTransAnim;
-		mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
-		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mAnim));
+		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir));
 
 		// Render the shield around the enemy
 		g_EnemyShield.render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2);

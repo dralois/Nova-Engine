@@ -220,8 +220,8 @@ ShieldVertexPSIn ShieldVS(ShieldVertexVSIn Input)
     ShieldVertexPSIn output = (ShieldVertexPSIn) 0;
     // Calculate the position in regards to shield radius
     output.Pos = mul(float4(mul(Input.Pos.xyz, g_ShieldRadius), 1), g_WorldViewProjection);
-    // Normal is simply the input vertex position
-    output.Nor = normalize(mul(float4(Input.Pos.xyz, 0), g_WorldNormals).xyz);    
+    // Normal is the normalized vertex position
+    output.Nor = normalize(Input.Pos.xyz);
     // Calculate screen position
     output.Tex = ((output.Pos.xy / output.Pos.w) + 1.0F) / 2.0F;
     // Calculate depth
@@ -248,7 +248,7 @@ float4 ShieldPS(ShieldVertexPSIn Input) : SV_Target0
     }
     // Calculate view direction
     float3 viewDir = normalize(g_CameraPos.xyz - Input.PosWorld);
-    // Calculate rim strength
+    // Calculate rim strength (direction * normal = 0 equals on the rim)
     float rim = 1 - abs(dot(Input.Nor, viewDir));
     // Select maximum of both
     float glow = max(intersect, rim);
