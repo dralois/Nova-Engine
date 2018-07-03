@@ -662,7 +662,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		l_objNewEnemy.Identifier = randEnemy.Identifier;
 		l_objNewEnemy.Position = s1;
 		l_objNewEnemy.Velocity = randEnemy.Speed * XMVector4Normalize(s2 - s1);
-		l_objNewEnemy.Radius = randEnemy.Size;
+		l_objNewEnemy.Radius = randEnemy.Size * (1.0F / randEnemy.Scale);
 		l_objNewEnemy.Scale = randEnemy.Scale;		
 		// Store in the list
 		g_enemyInstances.push_back(l_objNewEnemy);
@@ -950,14 +950,12 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 
 		// Update matrices to have scaling * animation as world transformation matrix
 		mWorld = XMMatrixScaling(enemyType.Size, enemyType.Size, enemyType.Size) * mRotAnim * mTransAnim;
-		XMMATRIX mWorldView = mWorld * g_camera.GetViewMatrix();
-		mWorldViewProj = mWorldView * g_camera.GetProjMatrix();
+		mWorldViewProj = mWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
 		mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
 		XMVECTOR mCameraLookDir = g_camera.GetLookAtPt();
 
 		// Save in shader
 		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_gameEffect.g_pWorldViewMatrix->SetMatrix((float*)&mWorldView));
 		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
 		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals));
 		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir));

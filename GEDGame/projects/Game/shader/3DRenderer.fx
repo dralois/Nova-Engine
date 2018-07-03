@@ -115,19 +115,28 @@ DepthStencilState EnableDepth
     DepthFunc = LESS_EQUAL;
 };
 
+// Don't write to w-buffer but test against it
+DepthStencilState ShieldDepth
+{
+    DepthEnable = TRUE;
+    DepthWriteMask = ZERO;
+    DepthFunc = LESS_EQUAL;
+};
+
 BlendState NoBlending
 {
     AlphaToCoverageEnable = FALSE;
     BlendEnable[0] = FALSE;
 };
 
+// Simple additive blending
 BlendState BSBlendShield
 {
     BlendEnable[0] = TRUE;
     SrcBlend[0] = SRC_ALPHA;
     SrcBlendAlpha[0] = SRC_ALPHA;
     DestBlend[0] = ONE;
-    DestBlendAlpha[0] = SRC_ALPHA;
+    DestBlendAlpha[0] = ONE;
 };
 
 //--------------------------------------------------------------------------------------
@@ -291,7 +300,7 @@ technique11 Render
         SetPixelShader(CompileShader(ps_4_0, ShieldPS()));
 
         SetRasterizerState(rsCullNone);
-        SetDepthStencilState(EnableDepth, 0);
+        SetDepthStencilState(ShieldDepth, 0);
         SetBlendState(BSBlendShield, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
     }
 }
