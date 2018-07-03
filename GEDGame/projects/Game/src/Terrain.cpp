@@ -5,25 +5,16 @@
 
 using namespace DirectX;
 
-Terrain::Terrain(void):
-	indexBuffer(nullptr),
-	diffuseTexture(nullptr),
-	diffuseTextureSRV(nullptr),
-	normalTexture(nullptr),
-	normalTextureSRV(nullptr),
-	heightBuffer(nullptr),
-	heightBufferSRV(nullptr)
-{
-}
-
-Terrain::~Terrain(void)
-{
-}
+#pragma region Properties
 
 float Terrain::GetHeightAtXY(float pi_dX, float pi_dY)
 {
 	return dHeightfield[IDX((int)roundf((iResolution - 1) * pi_dX), (int)roundf((iResolution - 1) * pi_dY), iResolution)];
 }
+
+#pragma endregion
+
+#pragma region Procedures
 
 HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 {
@@ -169,3 +160,24 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
     // Draw (no. of indices must be known..)
     context->DrawIndexed(bd.ByteWidth / sizeof(unsigned int), 0, 0);	
 }
+
+#pragma endregion
+
+#pragma region Contructor & Destructor
+
+Terrain::Terrain(void) :
+	indexBuffer(nullptr),
+	diffuseTexture(nullptr),
+	diffuseTextureSRV(nullptr),
+	normalTexture(nullptr),
+	normalTextureSRV(nullptr),
+	heightBuffer(nullptr),
+	heightBufferSRV(nullptr)
+{
+}
+
+Terrain::~Terrain(void)
+{
+}
+
+#pragma endregion

@@ -19,59 +19,64 @@ HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
 	loopcount = loopcount < 2 ? 4 : loopcount * 2;
 
 	// Vector that contains the sphere vertices
-	vector<PosTex> l_arrSphere;
+	vector<ShieldVertexIn> l_arrSphere;
 
 	// Zenith loop
 	for (int i = 0;  i < loopcount; i++) {
-		// Azimuth loop
-		for (int j = 0; j < loopcount; j++) {
-			PosTex l_vPush;
-			float x, y, z, u, v;
+		// Azimuth loop (first/last level is only one ring)
+		for (int j = 0; j < loopcount; j += (i == 0 || i == (loopcount - 1)) ? 2 : 1) {
+			ShieldVertexIn l_vPush;
+			float x, y, z, u, v;	
 			// Offsets depending on azimuth and zenith
-			float off_top = (i == 0 ? 0 : (i == loopcount - 2 ? 2 * PI / loopcount : (j % 2 == 0 ? 0 : 2 * PI / loopcount)));
-			float off_bot = (i == 0 ? 2 * PI / loopcount : (i == loopcount - 2 ? 0 : (j % 2 == 0 ? 2 * PI / loopcount : 0)));
-			int add_i = (i == 0 ? 1 : (i == loopcount - 2 ? 0 : (j % 2 == 0 ? 1 : 0)));
+			float off_top = (i == 0 ? 0 : (i == loopcount - 1 ? 2 * PI / loopcount : (j % 2 == 0 ? 0 : 2 * PI / loopcount)));
+			float off_bot = (i == 0 ? 2 * PI / loopcount : (i == loopcount - 1 ? 0 : (j % 2 == 0 ? 2 * PI / loopcount : 0)));
+			// Flips tri's around depending on level
+			int add_i = (i == 0 ? 1 : (i == loopcount - 1 ? 0 : (j % 2 == 0 ? 1 : 0)));
+			// Special cases at very bottom, also phase them each level
+			int add_j = i == loopcount - 1 ? 0 : i % 2;
 			// Top vertex / Top left vertex
-			x = cosf((((float)j / loopcount) * (2.0f * PI)) - off_top) * sinf(((float)i / loopcount) * PI);
-			y = sinf((((float)j / loopcount) * (2.0f * PI)) - off_top) * sinf(((float)i / loopcount) * PI);
-			z = cosf(((float)i / loopcount) * PI);
-			u = atan2f(y, x);
-			v = acosf(z) / PI;
+			x = cosf((((float)(j + add_j) / loopcount) * (2.0f * PI)) - off_top) * sinf(((float)i / loopcount) * PI);
+			z = sinf((((float)(j + add_j) / loopcount) * (2.0f * PI)) - off_top) * sinf(((float)i / loopcount) * PI);
+			y= cosf(((float)i / loopcount) * PI);
+			u = atan2f(z, x) / PI;
+			v = acosf(y) / PI;
 			l_vPush.Position = XMVectorSet(x, y, z, 1);
 			l_vPush.TexCoord = XMFLOAT2(u, v);
 			l_arrSphere.push_back(l_vPush);
 			// Bottom right vertex / Top right vertex
-			x = cosf((((float)j / loopcount) * (2.0f * PI)) + off_top + off_bot) * sinf(((float)(i + add_i) / loopcount) * PI);
-			y = sinf((((float)j / loopcount) * (2.0f * PI) )+ off_top + off_bot) * sinf(((float)(i + add_i) / loopcount) * PI);
-			z = cosf(((float)(i + add_i) / loopcount) * PI);
-			u = atan2f(y, x);
-			v = acosf(z) / PI;
+			x = cosf((((float)(j + add_j) / loopcount) * (2.0f * PI)) + off_top + off_bot) * sinf(((float)(i + add_i) / loopcount) * PI);
+			z = sinf((((float)(j + add_j) / loopcount) * (2.0f * PI) )+ off_top + off_bot) * sinf(((float)(i + add_i) / loopcount) * PI);
+			y = cosf(((float)(i + add_i) / loopcount) * PI);
+			u = atan2f(z, x) / PI;
+			v = acosf(y) / PI;
 			l_vPush.Position = XMVectorSet(x, y, z, 1);
 			l_vPush.TexCoord = XMFLOAT2(u, v);
 			l_arrSphere.push_back(l_vPush);
 			// Bottom left vertex / Bottom vertex
-			x = cosf((((float)j / loopcount) * (2.0f * PI)) - off_bot) * sinf(((float)(i + 1) / loopcount) * PI);
-			y = sinf((((float)j / loopcount) * (2.0f * PI)) - off_bot) * sinf(((float)(i + 1) / loopcount) * PI);
-			z = cosf(((float)(i + 1) / loopcount) * PI);
-			u = atan2f(y, x);
-			v = acosf(z) / PI;
+			x = cosf((((float)(j + add_j) / loopcount) * (2.0f * PI)) - off_bot) * sinf(((float)(i + 1) / loopcount) * PI);
+			z = sinf((((float)(j + add_j) / loopcount) * (2.0f * PI)) - off_bot) * sinf(((float)(i + 1) / loopcount) * PI);
+			y = cosf(((float)(i + 1) / loopcount) * PI);
+			u = atan2f(z, x) / PI;
+			v = acosf(y) / PI;
 			l_vPush.Position = XMVectorSet(x, y, z, 1);
 			l_vPush.TexCoord = XMFLOAT2(u, v);
 			l_arrSphere.push_back(l_vPush);
 		}
 	}
 
+	// Data description
 	D3D11_SUBRESOURCE_DATA id = { 0 };
 	id.pSysMem = &l_arrSphere[0];
-	id.SysMemPitch = sizeof(PosTex);
+	id.SysMemPitch = sizeof(ShieldVertexIn);
 	id.SysMemSlicePitch = 0;
 	
+	// 
 	D3D11_BUFFER_DESC bd = { 0 };
 	bd.MiscFlags = 0;
 	bd.CPUAccessFlags = 0;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.ByteWidth = sizeof(PosTex) * l_arrSphere.size();
+	bd.ByteWidth = sizeof(ShieldVertexIn) * l_arrSphere.size();
 
 	// Create vertex buffer
 	V(pDevice->CreateBuffer(&bd, &id, &m_pVertexBuffer));
@@ -79,13 +84,17 @@ HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
 	// Save the size
 	m_iVertexCount = l_arrSphere.size();
 
+	// Create texture
+	V(DirectX::CreateDDSTextureFromFile(pDevice, L"resources\\wasser12.DDS", (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
+
 	return S_OK;
 }
 
 void Shield::destroy()
 {
 	SAFE_RELEASE(m_pVertexBuffer);
-	SAFE_RELEASE(m_pShieldTexture2D);
+	SAFE_RELEASE(m_pShieldTex2D);
+	SAFE_RELEASE(m_pShieldTexSRV);
 }
 
 HRESULT Shield::createDepthBuffer(ID3D11Device * pDevice, UINT width, UINT height)
@@ -172,18 +181,22 @@ void Shield::destroyInputLayout()
 	SAFE_RELEASE(m_pInputLayout)
 }
 
-HRESULT Shield::render(ID3D11DeviceContext * context, ID3DX11EffectPass * pass)
+HRESULT Shield::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
+	ID3DX11EffectShaderResourceVariable* diffuseTex)
 {
 	HRESULT hr;
 
 	// Bind the terrain vertex buffer to the input assembler stage 
 	ID3D11Buffer* vbs[] = { m_pVertexBuffer, };
-	unsigned int strides[] = { sizeof(PosTex), }, offsets[] = { 0, };
+	unsigned int strides[] = { sizeof(ShieldVertexIn), }, offsets[] = { 0, };
 	context->IASetVertexBuffers(0, 1, vbs, strides, offsets);
 
 	// Tell the input assembler stage which primitive topology to use
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	context->IASetInputLayout(m_pInputLayout);
+
+	// Set texture
+	V(diffuseTex->SetResource(m_pShieldTexSRV));
 
 	// Apply the pass
 	V(pass->Apply(0, context));
@@ -200,7 +213,9 @@ HRESULT Shield::render(ID3D11DeviceContext * context, ID3DX11EffectPass * pass)
 
 Shield::Shield() :
 	m_pVertexBuffer(nullptr),
-	m_pShieldTexture2D(nullptr)
+	m_pShieldTex2D(nullptr),
+	m_pShieldTexSRV(nullptr),
+	m_iVertexCount(0)
 {
 }
 

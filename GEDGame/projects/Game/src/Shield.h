@@ -12,7 +12,8 @@
 
 #include "debug.h"
 
-struct PosTex {
+// Shield vertex
+struct ShieldVertexIn {
 	DirectX::XMVECTOR Position;
 	DirectX::XMFLOAT2 TexCoord;
 };
@@ -40,21 +41,23 @@ public:
 	static void destroyInputLayout();
 
 	// Render the effect
-	HRESULT render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass);
+	HRESULT render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
+		ID3DX11EffectShaderResourceVariable* diffuseTex);
 
 	// Depth buffer as texture
-	static ID3D11ShaderResourceView*		g_pDepthSRV;
+	static ID3D11ShaderResourceView*	g_pDepthSRV;
 	// Depth buffer view
-	static ID3D11DepthStencilView*			g_pDepthStencilView;
+	static ID3D11DepthStencilView*		g_pDepthStencilView;
 
 private:
 	// A texture that is a tileable force shield
-	ID3DX11EffectShaderResourceVariable*    m_pShieldTexture2D;
+	ID3D11ShaderResourceView*		m_pShieldTexSRV;
+	ID3D11Texture2D*				m_pShieldTex2D;
 
 	// Vertex buffer
-	ID3D11Buffer*							m_pVertexBuffer;
-	int										m_iVertexCount;
+	ID3D11Buffer*					m_pVertexBuffer;
+	int								m_iVertexCount;
 
 	// Input layout
-	static ID3D11InputLayout*				m_pInputLayout;
+	static ID3D11InputLayout*		m_pInputLayout;
 };

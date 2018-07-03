@@ -39,7 +39,6 @@ struct GameEffect
 	ID3DX11EffectShaderResourceVariable*    g_pGlowTexture2D;			// Texture for the glow color
 
 	ID3DX11EffectScalarVariable*			g_pFarPlaneDist;			// Far plane distance
-	ID3DX11EffectScalarVariable*			g_pShieldRadius;			// Radius of the shield
 	ID3DX11EffectShaderResourceVariable*    g_pDepthBuffer2D;			// Texture for the glow color
 
 	ID3DX11EffectShaderResourceVariable*	g_pTerrainHeightTexture2D;	// Heightmap texture
@@ -74,20 +73,19 @@ struct GameEffect
 		SAFE_GET_PASS(g_pTechnique, "P2_Shield", g_pShieldPass2);
 
 		// Obtain the effect variables
-		SAFE_GET_RESOURCE(g_pEffect, "g_Diffuse", g_pDiffuseTexture2D);
 		SAFE_GET_MATRIX(g_pEffect, "g_World", g_pWorldMatrix);
+		SAFE_GET_MATRIX(g_pEffect, "g_WorldNormals", g_pWorldNormalMatrix);
 		SAFE_GET_MATRIX(g_pEffect, "g_WorldViewProjection", g_pWorldViewProjMatrix);   
 		SAFE_GET_VECTOR(g_pEffect, "g_LightDir", g_pLightDirVector);
+		SAFE_GET_VECTOR(g_pEffect, "g_CameraPos", g_pCameraPosWorld);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Diffuse", g_pDiffuseTexture2D);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Specular", g_pSpecularTexture2D);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Glow", g_pGlowTexture2D);
+		SAFE_GET_SCALAR(g_pEffect, "g_FarPlaneDist", g_pFarPlaneDist);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Depth", g_pDepthBuffer2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_HeightMap", g_pTerrainHeightTexture2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_NormalMap", g_pTerrainNormalTexture2D);
 		SAFE_GET_SCALAR(g_pEffect, "g_TerrainRes", g_pTerrainResolution);
-		SAFE_GET_MATRIX(g_pEffect, "g_WorldNormals", g_pWorldNormalMatrix);
-		SAFE_GET_RESOURCE(g_pEffect, "g_Specular", g_pSpecularTexture2D);
-		SAFE_GET_RESOURCE(g_pEffect, "g_Glow", g_pGlowTexture2D);
-		SAFE_GET_RESOURCE(g_pEffect, "g_Depth", g_pDepthBuffer2D);
-		SAFE_GET_VECTOR(g_pEffect, "g_CameraPos", g_pCameraPosWorld);
-		SAFE_GET_SCALAR(g_pEffect, "g_ShieldRadius", g_pShieldRadius);
-		SAFE_GET_SCALAR(g_pEffect, "g_FarPlaneDist", g_pFarPlaneDist);
 
 		return S_OK;
 	}

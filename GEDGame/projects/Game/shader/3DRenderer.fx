@@ -26,7 +26,6 @@ cbuffer cbChangesEveryFrame
 	matrix	g_WorldNormals;
     matrix  g_World;
     float4  g_CameraPos;
-    float   g_ShieldRadius;
 };
 
 //--------------------------------------------------------------------------------------
@@ -48,9 +47,9 @@ struct ShieldVertexVSIn
 struct ShieldVertexPSIn
 {
     float4 Pos : SV_POSITION;
-    float3 Nor : NORMAL;
     float2 Tex : TEXCOORD;
     float Depth : DEPTH;
+    float3 NorWorld : NORMAL;
     float3 PosWorld : POSITION;
 };
 
@@ -219,15 +218,15 @@ ShieldVertexPSIn ShieldVS(ShieldVertexVSIn Input)
 {
     ShieldVertexPSIn output = (ShieldVertexPSIn) 0;
     // Calculate the position in regards to shield radius
-    output.Pos = mul(float4(mul(Input.Pos.xyz, g_ShieldRadius), 1), g_WorldViewProjection);
-    // Normal is the normalized vertex position
-    output.Nor = normalize(Input.Pos.xyz);
-    // Calculate screen position
-    output.Tex = ((output.Pos.xy / output.Pos.w) + 1.0F) / 2.0F;
+    output.Pos = mul(Input.Pos, g_WorldViewProjection);
+    // Save texcoords
+    output.Tex = Input.Tex;
     // Calculate depth
     output.Depth = output.Pos.z / output.Pos.w;
+    // Normal is the normalized vertex position (transformed)
+    output.NorWorld = normalize(mul(float4(Input.Pos.xyz, 0), g_WorldNormals).xyz);
     // Calculate world position as well
-    output.PosWorld = mul(float4(mul(Input.Pos.xyz, g_ShieldRadius), 1), g_World).xyz;
+    output.PosWorld = mul(Input.Pos, g_World).xyz;
     // Pass to vertex shader
     return output;
 }
@@ -241,20 +240,20 @@ float4 ShieldPS(ShieldVertexPSIn Input) : SV_Target0
     float depthDiff = currDepth - Input.Depth;
     float intersect = 0;
     // If difference is positive
-    if (depthDiff > 0)
+    if (depthDiff > 0) 
     {
-        // Intersection strength
+        // Power of intersection terrain / shield
         intersect = 1 - smoothstep(0, (1.0f / g_FarPlaneDist), depthDiff);
     }
     // Calculate view direction
     float3 viewDir = normalize(g_CameraPos.xyz - Input.PosWorld);
-    // Calculate rim strength (direction * normal = 0 equals on the rim)
-    float rim = 1 - abs(dot(Input.Nor, viewDir));
+    // Calculate rim power (direction * normal = 0 if on the rim)
+    float rim = 1 - abs(dot(Input.NorWorld, viewDir));
     // Select maximum of both
     float glow = max(intersect, rim);
+    float4 matDiffuse = g_Diffuse.Sample(samAnisotropic, Input.Tex);
     // Return smoothed blue outline
-    return lerp(float4(0, 0, 0, 0), float4(0, 0, 1, 1), pow(glow, 4));
-
+    return lerp(matDiffuse * float4(0.5, 0.5, 1, .05), matDiffuse * float4(0.5, 0.5, 1, 1), pow(glow, 2));
 }
 
 //--------------------------------------------------------------------------------------

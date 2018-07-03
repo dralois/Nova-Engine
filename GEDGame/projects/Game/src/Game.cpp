@@ -808,7 +808,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 //--------------------------------------------------------------------------------------
 // Render the scene using the D3D11 device
 //--------------------------------------------------------------------------------------
-void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, 
+void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext,
 	double fTime, float fElapsedTime, void* pUserContext)
 {
 	UNREFERENCED_PARAMETER(pd3dDevice);
@@ -848,7 +848,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	//--------------------------------------------------------------------------------------
 
 	// Update variables that change once per frame
-	XMMATRIX worldViewProj = g_terrainWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();	
+	XMMATRIX worldViewProj = g_terrainWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
 	// Transpose and inverse the world matrix
 	XMMATRIX worldNormal = XMMatrixTranspose(XMMatrixInverse(nullptr, g_terrainWorld));
 
@@ -885,12 +885,12 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	{
 		// Create matrices for mesh transformation
 		XMMATRIX mTrans, mScale, mRot;
-		mRot = XMMatrixRotationRollPitchYaw(DEG2RAD(it->RotationX), DEG2RAD(it->RotationY),DEG2RAD(it->RotationZ));
+		mRot = XMMatrixRotationRollPitchYaw(DEG2RAD(it->RotationX), DEG2RAD(it->RotationY), DEG2RAD(it->RotationZ));
 		mTrans = XMMatrixTranslation(it->TranslationX, it->TranslationY, it->TranslationZ);
 		mScale = XMMatrixScaling(it->Scale, it->Scale, it->Scale);
 
 		// Object to world space for mesh in correct order (for lighting)
-		XMMATRIX mWorld =  mRot * mTrans * mScale * (it->Classification == "Cockpit" ? g_camera.GetWorldMatrix() : XMMatrixIdentity());
+		XMMATRIX mWorld = mRot * mTrans * mScale * (it->Classification == "Cockpit" ? g_camera.GetWorldMatrix() : XMMatrixIdentity());
 		// Object to clip space (for rendering)
 		XMMATRIX mWorldViewProj = mWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
 		// Normals transformation matrix (inverse transposed of world)
@@ -902,7 +902,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
 		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
 		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
+			V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
 
 		// Render the mesh accordingly
 		g_Meshes[it->Identifier]->render(pd3dImmediateContext, g_gameEffect.g_pMeshPass1, g_gameEffect.g_pDiffuseTexture2D,
@@ -914,7 +914,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	//--------------------------------------------------------------------------------------
 
 	// Loop over all the enemy instances
-	for(auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); it++)
+	for (auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); it++)
 	{
 		// Get enemy type
 		ConfigParser::EnemyType enemyType = g_configParser.GetEnemyTypes()[it->Identifier];
@@ -937,25 +937,33 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMMATRIX mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
 		// Store camera position
 		XMVECTOR mCameraPosWorld = g_camera.GetEyePt();
-		XMVECTOR mCameraLookDir = g_camera.GetLookAtPt();
 
 		// Save in shader
 		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
 		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
 		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
 		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraPosWorld));
-		V(g_gameEffect.g_pShieldRadius->SetFloat(it->Radius));
 
 		// Render the enemy accordingly		
 		g_Meshes[enemyType.Mesh]->render(pd3dImmediateContext, g_gameEffect.g_pMeshPass1, g_gameEffect.g_pDiffuseTexture2D,
 			g_gameEffect.g_pSpecularTexture2D, g_gameEffect.g_pGlowTexture2D);
 
-		// Update the world matrix to also include the animation transform
-		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mAnim));
+		// Update matrices to have scaling * animation as world transformation matrix
+		mWorld = XMMatrixScaling(enemyType.Size, enemyType.Size, enemyType.Size) * mRotAnim * mTransAnim;
+		XMMATRIX mWorldView = mWorld * g_camera.GetViewMatrix();
+		mWorldViewProj = mWorldView * g_camera.GetProjMatrix();
+		mWorldNormals = XMMatrixTranspose(XMMatrixInverse(nullptr, mWorld));
+		XMVECTOR mCameraLookDir = g_camera.GetLookAtPt();
+
+		// Save in shader
+		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_gameEffect.g_pWorldViewMatrix->SetMatrix((float*)&mWorldView));
+		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals));
 		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir));
 
 		// Render the shield around the enemy
-		g_EnemyShield.render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2);
+		g_EnemyShield.render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2, g_gameEffect.g_pDiffuseTexture2D);
 	}
 
 	//--------------------------------------------------------------------------------------
@@ -970,11 +978,11 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 			l_CurrSprites.push_back(it.Particle);
 		}
 		// Sort based on distance to camera
-		sort(l_CurrSprites.begin(), l_CurrSprites.end(), 
+		sort(l_CurrSprites.begin(), l_CurrSprites.end(),
 			[](SpriteVertex i, SpriteVertex j)
 		{
-			return XMVector4Greater(XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&i.Position)), 
-									XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&j.Position))); 
+			return XMVector4Greater(XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&i.Position)),
+				XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&j.Position)));
 		});
 
 		// Render them

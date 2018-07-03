@@ -14,16 +14,8 @@
 
 class Terrain
 {
-public:
-	
-	//Struct for vertices
-	struct SimpleVertex
-	{
-		DirectX::XMFLOAT4 Pos;
-		DirectX::XMFLOAT4 Normal;
-		DirectX::XMFLOAT2 UV;
-	};
-
+public:	
+	// Constructor / Destructor
 	Terrain(void);
 	~Terrain(void);
 
