@@ -54,8 +54,8 @@ struct GunInstance {
 // Projectile info
 struct Projectile {
 	SpriteVertex Particle;
-	XMVECTOR Velocity;
-	XMVECTOR Gravity;
+	XMFLOAT3 Velocity;
+	XMFLOAT3 Gravity;
 	float LifeTime;
 	int Damage;
 };
@@ -63,8 +63,8 @@ struct Projectile {
 // Enemy instance info
 struct EnemyInstance {
 	string Identifier;
-	XMVECTOR Position;
-	XMVECTOR Velocity;
+	XMFLOAT3 Position;
+	XMFLOAT3 Velocity;
 	int Hitpoints;
 	float Radius;
 	float Scale;
@@ -660,8 +660,8 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		// Adjust new instance
 		l_objNewEnemy.Hitpoints = randEnemy.Hitpoints;
 		l_objNewEnemy.Identifier = randEnemy.Identifier;
-		l_objNewEnemy.Position = s1;
-		l_objNewEnemy.Velocity = randEnemy.Speed * XMVector4Normalize(s2 - s1);
+		XMStoreFloat3(&l_objNewEnemy.Position, s1);
+		XMStoreFloat3(&l_objNewEnemy.Velocity, randEnemy.Speed * XMVector4Normalize(s2 - s1));
 		l_objNewEnemy.Radius = randEnemy.Size * (1.0F / randEnemy.Scale);
 		l_objNewEnemy.Scale = randEnemy.Scale;		
 		// Store in the list
@@ -675,9 +675,12 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 	// Update enemy positions and remove if too far out
 	for (auto it = g_enemyInstances.begin(); it != g_enemyInstances.end(); )
 	{
-		it->Position = XMVectorAdd(it->Position, XMVectorScale(it->Velocity, fElapsedTime));
-		float x = XMVectorGetX(it->Position);
-		float z = XMVectorGetZ(it->Position);
+		XMVECTOR currVel = XMLoadFloat3(&it->Velocity);
+		XMStoreFloat3(&it->Position, XMVectorAdd(XMLoadFloat3(&it->Position), XMVectorScale(currVel, fElapsedTime)));
+		XMVECTOR currPos = XMLoadFloat3(&it->Position);
+		// Store seperately b/c it's modified further down
+		float x = it->Position.x;
+		float z = it->Position.z;
 		// If outside of the radius
 		if (sqrtf(powf(x, 2) + powf(z, 2)) > g_configParser.GetSpawnInfo().RemoveCircleRadius)
 		{
@@ -695,9 +698,9 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			if (x >= 0.0f && x <= 1.0f && z >= 0.0f && z <= 1.0f) {
 				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height * 1.1;
 				// Adjust position accordingly
-				if(y > XMVectorGetY(it->Position))
+				if(y > it->Position.y)
 					// Lerp to avoid jumping movement
-					it->Position = XMVectorLerp(it->Position, XMVectorSetY(it->Position, y), 0.1);			
+					XMStoreFloat3(&it->Position, XMVectorLerp(currPos, XMVectorSetY(currPos, y), 0.1));			
 			}
 			// Increase iterator
 			it++;
@@ -725,13 +728,11 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			// Current camera inverse
 			XMMATRIX l_cameraInverse = XMMatrixInverse(nullptr, g_camera.GetViewMatrix());
 			// Use it to calculate the spawn position
-			XMVECTOR l_vPos = XMVector3Transform(XMVectorSet(it->Type.TranslationX, 
-															it->Type.TranslationY, 
-															it->Type.TranslationZ, 1),
-												l_cameraInverse);
+			XMVECTOR l_vPos = XMVector3Transform(XMVectorSet(it->Type.TranslationX, it->Type.TranslationY, 
+												it->Type.TranslationZ, 1), l_cameraInverse);
 			// Set projectile information
-			l_objNewProj.Velocity = XMVectorScale(XMVector4Normalize(g_camera.GetWorldAhead()), it->Type.ProjectileSpeed);
-			l_objNewProj.Gravity = XMVectorSet(0, it->Type.ParticleMass, 0, 0);
+			XMStoreFloat3(&l_objNewProj.Velocity, XMVectorScale(XMVector4Normalize(g_camera.GetWorldAhead()), it->Type.ProjectileSpeed));
+			XMStoreFloat3(&l_objNewProj.Gravity, XMVectorSet(0, it->Type.ParticleMass, 0, 0));
 			l_objNewProj.LifeTime = PROJECTILELIFETIME;
 			l_objNewProj.Damage = it->Type.Damage;
 			// Set particle information
@@ -754,13 +755,14 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		else {
 			// Update lifetime
 			it->LifeTime -= fElapsedTime;
+			XMVECTOR currVel = XMLoadFloat3(&it->Velocity);
 			// Subtract scaled gravity
-			it->Velocity = XMVectorSubtract(it->Velocity, XMVectorScale(it->Gravity, fElapsedTime));
+			XMStoreFloat3(&it->Velocity, XMVectorSubtract(currVel, XMVectorScale(XMLoadFloat3(&it->Gravity), fElapsedTime)));
 			// Update position afterwards based on velocity
-			XMFLOAT3* l_ParticlePos = &(it->Particle.Position);
-			XMVECTOR l_vPos = XMVectorAdd(XMVectorSet(l_ParticlePos->x, l_ParticlePos->y, l_ParticlePos->z, 1),
-											XMVectorScale(it->Velocity, fElapsedTime));
-			XMStoreFloat3(l_ParticlePos, l_vPos);
+			XMStoreFloat3(&it->Particle.Position, XMVectorAdd(XMVectorSet(it->Particle.Position.x,
+																		it->Particle.Position.y, 
+																		it->Particle.Position.z, 1),
+																XMVectorScale(currVel, fElapsedTime)));
 			// Increment iterator
 			it++;
 		}
@@ -773,9 +775,9 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 	// Loop enemies
 	for (auto enemy = g_enemyInstances.begin(); enemy != g_enemyInstances.end(); ) {
 		// Loop projectiles
-		for (auto proj = g_Projectiles.begin(); proj != g_Projectiles.end(); ) {
+		for (auto proj = g_Projectiles.begin(); proj != g_Projectiles.end(); ) {		
 			// Compare the distance between projectile and enemy against their bounding sphere radii
-			if (!XMVector4Greater(XMVector4Length(XMVectorSubtract(enemy->Position, XMLoadFloat3(&(proj->Particle.Position)))),
+			if (!XMVector4Greater(XMVector4Length(XMVectorSubtract(XMLoadFloat3(&enemy->Position), XMLoadFloat3(&(proj->Particle.Position)))),
 												XMVectorSet((enemy->Radius * enemy->Scale) + proj->Particle.Radius, 
 															(enemy->Radius * enemy->Scale) + proj->Particle.Radius,
 															(enemy->Radius * enemy->Scale) + proj->Particle.Radius, 0))) {
@@ -926,9 +928,9 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		// Object view transformation
 		XMMATRIX mWorld = mScale * mRot *  mTrans;
 		// Rotation
-		XMMATRIX mRotAnim = XMMatrixRotationY(atan2f(XMVectorGetX(it->Velocity), XMVectorGetZ(it->Velocity)));
+		XMMATRIX mRotAnim = XMMatrixRotationY(atan2f(it->Velocity.x, it->Velocity.z));
 		// Offset
-		XMMATRIX mTransAnim = XMMatrixTranslationFromVector(it->Position);
+		XMMATRIX mTransAnim = XMMatrixTranslationFromVector(XMLoadFloat3(&it->Position));
 		// Movement matrix
 		XMMATRIX mAnim = mRotAnim * mTransAnim;
 		// Object to clip space (for rendering)
