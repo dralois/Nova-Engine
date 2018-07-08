@@ -212,9 +212,9 @@ HRESULT Shield::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
 #pragma region Constructors & Destructors
 
 Shield::Shield() :
-	m_pVertexBuffer(nullptr),
-	m_pShieldTex2D(nullptr),
-	m_pShieldTexSRV(nullptr),
+	m_pVertexBuffer(NULL),
+	m_pShieldTex2D(NULL),
+	m_pShieldTexSRV(NULL),
 	m_iVertexCount(0)
 {
 }

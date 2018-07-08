@@ -20,9 +20,11 @@
 
 struct SpriteVertex
 {
-	DirectX::XMFLOAT3 Position;     // world-space position (sprite center)
-	float Radius;                   // world-space radius (= half side length of the sprite quad)
-	int TextureIndex;               // which texture to use (out of SpriteRenderer::m_spriteSRV)
+	DirectX::XMFLOAT3 Position;     // world-space position
+	float Radius;                   // world-space radius
+	int TextureIndex;               // which texture to use
+	float Progress;					// Animation progress
+	float Alpha;					// Additional alpha
 };
 
 class SpriteRenderer
@@ -66,7 +68,7 @@ private:
 	// Up vector
 	ID3DX11EffectVectorVariable*			m_pCameraUp;
 	// Variable for the sprite texture
-	ID3DX11EffectShaderResourceVariable*    m_pSpriteTexture2D;
+	ID3DX11EffectShaderResourceVariable*    m_pTextureArray2D;
 
 	// Sprite textures and corresponding shader resource views.
 	std::vector<ID3D11ShaderResourceView*>	m_pSpriteSRV;

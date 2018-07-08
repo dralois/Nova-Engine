@@ -10,8 +10,6 @@
 #include "SimpleImage.h"
 #include "Util.cpp"
 
-#include "debug.h"
-
 class Terrain
 {
 public:	

@@ -38,6 +38,7 @@ struct GameEffect
 	ID3DX11EffectShaderResourceVariable*    g_pSpecularTexture2D;		// Texture for the specular color
 	ID3DX11EffectShaderResourceVariable*    g_pGlowTexture2D;			// Texture for the glow color
 
+	ID3DX11EffectVectorVariable*			g_pHitArray;				// Array of shield hits
 	ID3DX11EffectScalarVariable*			g_pFarPlaneDist;			// Far plane distance
 	ID3DX11EffectShaderResourceVariable*    g_pDepthBuffer2D;			// Texture for the glow color
 
@@ -81,6 +82,7 @@ struct GameEffect
 		SAFE_GET_RESOURCE(g_pEffect, "g_Diffuse", g_pDiffuseTexture2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Specular", g_pSpecularTexture2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Glow", g_pGlowTexture2D);
+		SAFE_GET_VECTOR(g_pEffect, "g_Hits", g_pHitArray);
 		SAFE_GET_SCALAR(g_pEffect, "g_FarPlaneDist", g_pFarPlaneDist);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Depth", g_pDepthBuffer2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_HeightMap", g_pTerrainHeightTexture2D);

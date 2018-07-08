@@ -6,7 +6,6 @@
 #include <vector>
 #include <cstdint>
 
-
 //This class ecapsulates the D3D11 resources needed for a mesh
 class Mesh
 {

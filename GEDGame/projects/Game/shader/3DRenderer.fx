@@ -26,6 +26,7 @@ cbuffer cbChangesEveryFrame
 	matrix	g_WorldNormals;
     matrix  g_World;
     float4  g_CameraPos;
+    float3  g_Hits[10];
 };
 
 //--------------------------------------------------------------------------------------
@@ -258,11 +259,26 @@ float4 ShieldPS(ShieldVertexPSIn Input) : SV_Target0
     float3 viewDir = normalize(g_CameraPos.xyz - Input.PosWorld);
     // Calculate rim power (direction * normal = 0 if on the rim)
     float rim = 1 - abs(dot(Input.NorWorld, viewDir));
-    // Select maximum of both
+    // Initialize hit var
+    float hit = 0;
+    // For all current hits
+    for (int i = 0; i < 10; i++)
+    {
+        // If hit is valid
+        if (length(g_Hits[i]) > 0)
+        {
+            // The closer to a hit the brighter (distance in world coordinates)
+            hit = max(hit, pow(1 - smoothstep(0, 100, distance(g_Hits[i], Input.PosWorld)), 10));
+        }
+    }
+    // Select max of hit and rim
+    rim = max(rim, hit);
+    // Select max of intersect and rim/hit
     float glow = max(intersect, rim);
+    // Sample shield material
     float4 matDiffuse = g_Diffuse.Sample(samAnisotropic, Input.Tex);
     // Return smoothed blue outline
-    return lerp(matDiffuse * float4(0.5, 0.5, 1, .05), matDiffuse * float4(0.5, 0.5, 1, 1), pow(glow, 2));
+    return lerp(matDiffuse * float4(0, 0, 0, 0), matDiffuse * float4(0.5, 0.5, 1, 1), pow(glow, 2));
 }
 
 //--------------------------------------------------------------------------------------

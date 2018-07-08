@@ -46,6 +46,8 @@ public:
 		int Hitpoints;
 		float Size;
 		float Speed;
+		string DestroyAnim;
+		string DestroyPart;
 		string Mesh;
 		float Scale;
 		float RotationX;
@@ -79,6 +81,15 @@ public:
 		string FilePath;
 	};
 
+	// Descripes a sprite animation
+	struct Animation
+	{
+		string Identifier;
+		string SpriteName;
+		float SpriteRadius;
+		float Duration;
+	};
+
 	// Stores terrain information
 	struct TerrainInfo
 	{
@@ -105,6 +116,7 @@ public:
 #pragma region Properties
 
 	map<string, SpriteTexture> GetSpriteTextures();
+	map<string, Animation> GetAnimations();
 	map<string, EnemyType> GetEnemyTypes();
 	vector<RenderObject> GetRenderObjs();
 	map<string, GunType> GetGunTypes();
@@ -123,6 +135,7 @@ public:
 private:
 
 	map<string, SpriteTexture> spriteDictionary;
+	map<string, Animation> animationDictionary;
 	map<string, EnemyType> enemyDictionary;
 	map<string, GunType> gunDictionary;
 	map<string, Mesh> meshDictionary;

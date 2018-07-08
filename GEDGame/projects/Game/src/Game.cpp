@@ -36,6 +36,7 @@
 #define DEG2RAD( a ) ( (a) * XM_PI / 180.f )
 
 #define PROJECTILELIFETIME 10.0f
+#define PARTVEL 100.0f
 
 using namespace std;
 using namespace DirectX;
@@ -52,8 +53,8 @@ struct GunInstance {
 };
 
 // Projectile info
-struct Projectile {
-	SpriteVertex Particle;
+struct SpriteInstance {
+	SpriteVertex Sprite;
 	XMFLOAT3 Velocity;
 	XMFLOAT3 Gravity;
 	float LifeTime;
@@ -65,6 +66,10 @@ struct EnemyInstance {
 	string Identifier;
 	XMFLOAT3 Position;
 	XMFLOAT3 Velocity;
+	string DestroyAnim;
+	string DestroyPart;
+	XMFLOAT3 Hits[10] = {};
+	int currHit = 0;
 	int Hitpoints;
 	float Radius;
 	float Scale;
@@ -108,11 +113,12 @@ ConfigParser							g_configParser;
 
 // Meshes
 map<string, Mesh*>						g_Meshes;
-Shield									g_EnemyShield;
+Shield*									g_EnemyShield;
 bool									g_enableCameraFly = false;
 
 // Enemies
 list<EnemyInstance>						g_enemyInstances;
+list<SpriteInstance>					g_Explosions;
 float									g_spawnTimer = 0.0f;
 
 // Sprite renderer
@@ -120,7 +126,7 @@ SpriteRenderer*							g_spriteRenderer;
 
 // Guns
 vector<GunInstance>						g_Guns;
-list<Projectile>						g_Projectiles;
+list<SpriteInstance>					g_Projectiles;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -134,23 +140,17 @@ list<Projectile>						g_Projectiles;
 //--------------------------------------------------------------------------------------
 // Forward declarations 
 //--------------------------------------------------------------------------------------
-LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-	void* pUserContext);
+LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing, void* pUserContext);
 void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
 void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
 bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext);
-
-bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo *, UINT, const CD3D11EnumDeviceInfo *,
-	DXGI_FORMAT, bool, void*);
-HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-	void* pUserContext);
-HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
+bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo*, UINT, const CD3D11EnumDeviceInfo*, DXGI_FORMAT, bool, void*);
+HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
+HRESULT CALLBACK OnD3D11ResizedSwapChain(ID3D11Device* pd3dDevice, IDXGISwapChain* pSwapChain, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
 void CALLBACK OnD3D11ReleasingSwapChain(void* pUserContext);
 void CALLBACK OnD3D11DestroyDevice(void* pUserContext);
-void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, double fTime,
-	float fElapsedTime, void* pUserContext);
+void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3dImmediateContext, double fTime, float fElapsedTime, void* pUserContext);
 
 void InitApp();
 void DeinitApp();
@@ -219,7 +219,7 @@ void InitApp()
 	g_configParser.Load(pathA);
 
 	// Seed generator
-	srand(time(NULL));
+	srand(static_cast<int>(time(NULL)));
 
 	// Save configs locally
 	map <string, ConfigParser::Mesh> l_Meshes = g_configParser.GetMeshes();
@@ -233,6 +233,9 @@ void InitApp()
 
 	// Initialize the sprite renderer
 	g_spriteRenderer = new SpriteRenderer(g_configParser);
+
+	// Initialize the shield renderer
+	g_EnemyShield = new Shield();
 
 	// Initialize the guns
 	map <string, ConfigParser::GunType> l_Guns = g_configParser.GetGunTypes();
@@ -278,6 +281,8 @@ void DeinitApp()
 	g_Meshes.clear();
 	// Delete sprite renderer
 	SAFE_DELETE(g_spriteRenderer);
+	// Delete shield renderer
+	SAFE_DELETE(g_EnemyShield);
 }
 
 //--------------------------------------------------------------------------------------
@@ -370,7 +375,7 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	}
 
 	// Create the shield
-	V_RETURN(g_EnemyShield.create(pd3dDevice, 10));
+	V_RETURN(g_EnemyShield->create(pd3dDevice, 10));
 
 	// Create sprite renderer resources
 	V_RETURN(g_spriteRenderer->create(pd3dDevice));
@@ -404,7 +409,7 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	}
 
 	// Destroy shield renderer
-	g_EnemyShield.destroy();
+	g_EnemyShield->destroy();
 
 	// Destroy sprite renderer
 	g_spriteRenderer->destroy();
@@ -648,7 +653,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			g_configParser.GetSpawnInfo().InnerCircleRadius * cos(alphaInner),
 			1);
 		// Create random enemy
-		EnemyInstance l_objNewEnemy;
+		EnemyInstance l_NewEnemy;
 		// Get beginning of the map
 		map<string, ConfigParser::EnemyType> enemyTypes = g_configParser.GetEnemyTypes();
 		auto enemyIt = enemyTypes.begin();
@@ -658,14 +663,16 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		// Get the random type
 		ConfigParser::EnemyType randEnemy = enemyIt->second;
 		// Adjust new instance
-		l_objNewEnemy.Hitpoints = randEnemy.Hitpoints;
-		l_objNewEnemy.Identifier = randEnemy.Identifier;
-		XMStoreFloat3(&l_objNewEnemy.Position, s1);
-		XMStoreFloat3(&l_objNewEnemy.Velocity, randEnemy.Speed * XMVector4Normalize(s2 - s1));
-		l_objNewEnemy.Radius = randEnemy.Size * (1.0F / randEnemy.Scale);
-		l_objNewEnemy.Scale = randEnemy.Scale;		
+		l_NewEnemy.Hitpoints = randEnemy.Hitpoints;
+		l_NewEnemy.Identifier = randEnemy.Identifier;
+		l_NewEnemy.DestroyAnim = randEnemy.DestroyAnim;
+		l_NewEnemy.DestroyPart = randEnemy.DestroyPart;
+		XMStoreFloat3(&l_NewEnemy.Position, s1);
+		XMStoreFloat3(&l_NewEnemy.Velocity, randEnemy.Speed * XMVector4Normalize(s2 - s1));
+		l_NewEnemy.Radius = randEnemy.Size * (1.0F / randEnemy.Scale);
+		l_NewEnemy.Scale = randEnemy.Scale;
 		// Store in the list
-		g_enemyInstances.push_back(l_objNewEnemy);
+		g_enemyInstances.push_back(l_NewEnemy);
 	}
 
 	//--------------------------------------------------------------------------------------
@@ -696,11 +703,11 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			z /= g_configParser.GetTerrainInfo().Depth;
 			// Only if in terrain..
 			if (x >= 0.0f && x <= 1.0f && z >= 0.0f && z <= 1.0f) {
-				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height * 1.1;
+				float y = g_terrain.GetHeightAtXY(x, z) * g_configParser.GetTerrainInfo().Height * 1.1f;
 				// Adjust position accordingly
 				if(y > it->Position.y)
 					// Lerp to avoid jumping movement
-					XMStoreFloat3(&it->Position, XMVectorLerp(currPos, XMVectorSetY(currPos, y), 0.1));			
+					XMStoreFloat3(&it->Position, XMVectorLerp(currPos, XMVectorSetY(currPos, y), 0.1f));			
 			}
 			// Increase iterator
 			it++;
@@ -722,28 +729,33 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			// Reset the timer
 			it->CooldownLeft = it->Type.FireRate;
 			// Spawn a projectile
-			Projectile l_objNewProj;
+			SpriteInstance l_NewProj;
 			// Save in sprite vector
-			SpriteVertex l_objNewSprite;
-			// Current camera inverse
-			XMMATRIX l_cameraInverse = XMMatrixInverse(nullptr, g_camera.GetViewMatrix());
+			SpriteVertex l_NewSprite;
 			// Use it to calculate the spawn position
 			XMVECTOR l_vPos = XMVector3Transform(XMVectorSet(it->Type.TranslationX, it->Type.TranslationY, 
-												it->Type.TranslationZ, 1), l_cameraInverse);
+				it->Type.TranslationZ, 1), XMMatrixInverse(nullptr, g_camera.GetViewMatrix()));
 			// Set projectile information
-			XMStoreFloat3(&l_objNewProj.Velocity, XMVectorScale(XMVector4Normalize(g_camera.GetWorldAhead()), it->Type.ProjectileSpeed));
-			XMStoreFloat3(&l_objNewProj.Gravity, XMVectorSet(0, it->Type.ParticleMass, 0, 0));
-			l_objNewProj.LifeTime = PROJECTILELIFETIME;
-			l_objNewProj.Damage = it->Type.Damage;
+			XMStoreFloat3(&l_NewProj.Velocity, XMVectorScale(XMVector4Normalize(g_camera.GetWorldAhead()), it->Type.ProjectileSpeed));
+			XMStoreFloat3(&l_NewProj.Gravity, XMVectorSet(0, it->Type.ParticleMass, 0, 0));
+			l_NewProj.LifeTime = PROJECTILELIFETIME;
+			l_NewProj.Damage = it->Type.Damage;
 			// Set particle information
-			l_objNewSprite.TextureIndex = g_spriteRenderer->getSpriteID(it->Type.SpriteName);
-			XMStoreFloat3(&l_objNewSprite.Position, l_vPos);
-			l_objNewSprite.Radius = it->Type.SpriteRadius;
-			l_objNewProj.Particle = l_objNewSprite;
+			l_NewSprite.TextureIndex = g_spriteRenderer->getSpriteID(it->Type.SpriteName);
+			XMStoreFloat3(&l_NewSprite.Position, l_vPos);
+			l_NewSprite.Radius = it->Type.SpriteRadius;
+			l_NewSprite.Progress = 0.0f;
+			l_NewSprite.Alpha = 1.0f;
+			// Save in projectile
+			l_NewProj.Sprite = l_NewSprite;
 			// Save in vector
-			g_Projectiles.push_back(l_objNewProj);
+			g_Projectiles.push_back(l_NewProj);
 		}
 	}
+
+	//--------------------------------------------------------------------------------------
+	// Sprites
+	//--------------------------------------------------------------------------------------
 
 	// Update projectiles
 	for (auto it = g_Projectiles.begin(); it != g_Projectiles.end(); ) {
@@ -759,12 +771,35 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			// Subtract scaled gravity
 			XMStoreFloat3(&it->Velocity, XMVectorSubtract(currVel, XMVectorScale(XMLoadFloat3(&it->Gravity), fElapsedTime)));
 			// Update position afterwards based on velocity
-			XMStoreFloat3(&it->Particle.Position, XMVectorAdd(XMVectorSet(it->Particle.Position.x,
-																		it->Particle.Position.y, 
-																		it->Particle.Position.z, 1),
+			XMStoreFloat3(&it->Sprite.Position, XMVectorAdd(XMVectorSet(it->Sprite.Position.x,
+																		it->Sprite.Position.y, 
+																		it->Sprite.Position.z, 1),
 																XMVectorScale(currVel, fElapsedTime)));
-			// Increment iterator
+			// Next particle
 			it++;
+		}
+	}
+
+	// Loop explosions
+	for (auto expl = g_Explosions.begin(); expl != g_Explosions.end(); ) {
+		// Update animation progress
+		expl->Sprite.Progress = ((expl->Sprite.Progress * expl->LifeTime) + fElapsedTime) / expl->LifeTime;
+		// If animation finished remove it
+		if (expl->Sprite.Progress >= 1.0f) {
+			expl = g_Explosions.erase(expl);
+		}
+		else {
+			// Store velocity
+			XMVECTOR currVel = XMLoadFloat3(&expl->Velocity);
+			// Subtract scaled gravity
+			XMStoreFloat3(&expl->Velocity, XMVectorSubtract(currVel, XMVectorScale(XMLoadFloat3(&expl->Gravity), fElapsedTime)));
+			// Update position afterwards based on velocity
+			XMStoreFloat3(&expl->Sprite.Position, XMVectorAdd(XMVectorSet(expl->Sprite.Position.x,
+																			expl->Sprite.Position.y,
+																			expl->Sprite.Position.z, 1),
+																XMVectorScale(currVel, fElapsedTime)));
+			// Next explosion particle
+			expl++;
 		}
 	}
 	
@@ -777,17 +812,66 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 		// Loop projectiles
 		for (auto proj = g_Projectiles.begin(); proj != g_Projectiles.end(); ) {		
 			// Compare the distance between projectile and enemy against their bounding sphere radii
-			if (!XMVector4Greater(XMVector4Length(XMVectorSubtract(XMLoadFloat3(&enemy->Position), XMLoadFloat3(&(proj->Particle.Position)))),
-												XMVectorSet((enemy->Radius * enemy->Scale) + proj->Particle.Radius, 
-															(enemy->Radius * enemy->Scale) + proj->Particle.Radius,
-															(enemy->Radius * enemy->Scale) + proj->Particle.Radius, 0))) {
+			if (!XMVector4Greater(XMVector4Length(XMVectorSubtract(XMLoadFloat3(&enemy->Position), XMLoadFloat3(&(proj->Sprite.Position)))),
+												XMVectorSet((enemy->Radius * enemy->Scale) + proj->Sprite.Radius, 
+															(enemy->Radius * enemy->Scale) + proj->Sprite.Radius,
+															(enemy->Radius * enemy->Scale) + proj->Sprite.Radius, 0))) {
 				// Apply damage
 				enemy->Hitpoints -= proj->Damage;
+				// Save hits
+				enemy->Hits[enemy->currHit] = proj->Sprite.Position;
+				enemy->currHit = enemy->currHit++ % 10;
 				// Remove the projectile
 				proj = g_Projectiles.erase(proj);
-				// If damage hits zero remove enemy
-				if (enemy->Hitpoints <= 0) 
-					enemy = g_enemyInstances.erase(enemy);				
+				// If health hits zero
+				if (enemy->Hitpoints <= 0) {
+					// Create animation and sprite
+					SpriteInstance l_NewExpl;
+					SpriteVertex l_ExplSprite;
+					// Get animation description
+					ConfigParser::Animation destroyAnim = g_configParser.GetAnimations()[enemy->DestroyAnim];
+					ConfigParser::Animation destroyPart = g_configParser.GetAnimations()[enemy->DestroyPart];
+					// Save in struct
+					l_ExplSprite.TextureIndex = g_spriteRenderer->getSpriteID(destroyAnim.SpriteName);
+					l_ExplSprite.Position = enemy->Position;
+					l_ExplSprite.Radius = destroyAnim.SpriteRadius;
+					l_ExplSprite.Progress = 0.0f;
+					l_ExplSprite.Alpha = 1.0f;
+					// Save in animation
+					l_NewExpl.Sprite = l_ExplSprite;
+					l_NewExpl.LifeTime = destroyAnim.Duration;
+					l_NewExpl.Gravity = XMFLOAT3(0, 0, 0);
+					l_NewExpl.Velocity = XMFLOAT3(0, 0, 0);
+					// Save in explosions
+					g_Explosions.push_back(l_NewExpl);
+					// Random number of explosion particles (10-20)
+					int partAmount = rand() % 10 + 10;
+					// Create instances
+					for (int i = 0; i < partAmount; i++) {
+						// Random directional values
+						float rndA = DEG2RAD(rand() % 360);
+						float rndZ = DEG2RAD(rand() % 180);
+						// Create animation and sprite
+						SpriteInstance l_NewPart;
+						SpriteVertex l_PartSprite;
+						// Save in struct
+						l_PartSprite.TextureIndex = g_spriteRenderer->getSpriteID(destroyPart.SpriteName);
+						l_PartSprite.Position = enemy->Position;
+						l_PartSprite.Radius = destroyPart.SpriteRadius;
+						l_PartSprite.Progress = 0.0f;
+						l_PartSprite.Alpha = 1.0f;
+						// Random velocity and gravity
+						l_NewPart.Velocity = XMFLOAT3(sinf(rndZ) * cosf(rndA) * PARTVEL,
+							sinf(rndZ) * sinf(rndA) * PARTVEL, cosf(rndZ) * PARTVEL);
+						l_NewPart.Gravity = XMFLOAT3(0, (float) (rand() % (int)PARTVEL), 0);
+						l_NewPart.LifeTime = destroyPart.Duration;
+						l_NewPart.Sprite = l_PartSprite;
+						// Save in explosions
+						g_Explosions.push_back(l_NewPart);
+					}
+					// Remove enemy
+					enemy = g_enemyInstances.erase(enemy);
+				}
 			}
 			else {
 				// Just increment
@@ -842,7 +926,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	}
 
 	// Depth buffer rendering first
-	pd3dImmediateContext->OMSetRenderTargets(0, 0, Shield::g_pDepthStencilView);
+	pd3dImmediateContext->OMSetRenderTargets(0, NULL, Shield::g_pDepthStencilView);
 	pd3dImmediateContext->ClearDepthStencilView(Shield::g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//--------------------------------------------------------------------------------------
@@ -960,11 +1044,16 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		V(g_gameEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
 		V(g_gameEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
 		V(g_gameEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals));
-		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir));
-
+		V(g_gameEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir))
+		V(g_gameEffect.g_pHitArray->SetFloatVectorArray((float*)&it->Hits, 0, 10));
+		
 		// Render the shield around the enemy
-		g_EnemyShield.render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2, g_gameEffect.g_pDiffuseTexture2D);
+		g_EnemyShield->render(pd3dImmediateContext, g_gameEffect.g_pShieldPass2, g_gameEffect.g_pDiffuseTexture2D);
 	}
+
+	// Unbind the srv to prevent it from being both read/written to
+	V(g_gameEffect.g_pDepthBuffer2D->SetResource(NULL));
+	g_gameEffect.g_pShieldPass2->Apply(0, pd3dImmediateContext);
 
 	//--------------------------------------------------------------------------------------
 	// Render sprites last (transparent after opaque)
@@ -975,7 +1064,10 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		// Push sprites into a vector
 		vector<SpriteVertex> l_CurrSprites;
 		for (auto it : g_Projectiles) {
-			l_CurrSprites.push_back(it.Particle);
+			l_CurrSprites.push_back(it.Sprite);
+		}
+		for (auto it : g_Explosions) {
+			l_CurrSprites.push_back(it.Sprite);
 		}
 		// Sort based on distance to camera
 		sort(l_CurrSprites.begin(), l_CurrSprites.end(),

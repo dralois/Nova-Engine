@@ -17,6 +17,11 @@ map<string, ConfigParser::SpriteTexture> ConfigParser::GetSpriteTextures()
 	return spriteDictionary;
 }
 
+map<string, ConfigParser::Animation> ConfigParser::GetAnimations()
+{
+	return animationDictionary;
+}
+
 map<string, ConfigParser::Mesh> ConfigParser::GetMeshes()
 {
 	return meshDictionary;
@@ -88,6 +93,13 @@ void ConfigParser::Load(string filename)
 				spriteDictionary[name].Identifier = name;
 				l_strSrc >> spriteDictionary[name].FilePath;
 			}
+			else if (name == "Animation")
+			{
+				l_strSrc >> name;
+				animationDictionary[name].Identifier = name;
+				l_strSrc >> animationDictionary[name].SpriteName >> 
+					animationDictionary[name].SpriteRadius >> animationDictionary[name].Duration;
+			}
 			else if (name == "GunType")
 			{
 				l_strSrc >> name;
@@ -101,9 +113,9 @@ void ConfigParser::Load(string filename)
 				l_strSrc >> name;
 				enemyDictionary[name].Identifier = name;
 				l_strSrc >> enemyDictionary[name].Hitpoints >> enemyDictionary[name].Size >> enemyDictionary[name].Speed >>
-					enemyDictionary[name].Mesh >> enemyDictionary[name].Scale >> enemyDictionary[name].RotationX >>
-					enemyDictionary[name].RotationY >> enemyDictionary[name].RotationZ >> enemyDictionary[name].TranslationX >>
-					enemyDictionary[name].TranslationY >> enemyDictionary[name].TranslationZ;
+					enemyDictionary[name].DestroyAnim >> enemyDictionary[name].DestroyPart >> enemyDictionary[name].Mesh >> enemyDictionary[name].Scale >>
+					enemyDictionary[name].RotationX >> enemyDictionary[name].RotationY >> enemyDictionary[name].RotationZ >> 
+					enemyDictionary[name].TranslationX >> enemyDictionary[name].TranslationY >> enemyDictionary[name].TranslationZ;
 			}
 			else if (name == "Spawn")
 			{

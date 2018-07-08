@@ -2,14 +2,13 @@
 // Constant buffers
 //--------------------------------------------------------------------------------------
 
-int         g_TextureCount;
-Texture2D   g_SpriteTexture[2];
+Texture2DArray g_Textures[5];  // Texture array that represents an animation or sprite
 
 cbuffer cbChangesEveryFrame
 {
-    matrix g_ViewProjection;
-    float4 g_CameraRight;
-    float4 g_CameraUp;
+    matrix g_ViewProjection;    // Only camera and projection matrix
+    float4 g_CameraRight;       // Right vector
+    float4 g_CameraUp;          // Up vector
 };
 
 //--------------------------------------------------------------------------------------
@@ -18,16 +17,20 @@ cbuffer cbChangesEveryFrame
 
 struct SpriteVertex
 {
-    float3 Position : POSITION;
-    float Radius : RADIUS;
-    int TextureIndex : TEXINDEX;
+    float3 Position :   POSITION;
+    float Radius :      RADIUS;
+    int TextureIndex :  TEXINDEX;
+    float Progress :    PROGRESS;
+    float Alpha :       ALPHA;
 };
 
 struct PSVertex
 {
-    float4 Position : SV_POSITION;
-    float2 TexCoords : TEXCOORD;
-    int TextureIndex : TEXINDEX;
+    float4 Position :   SV_POSITION;
+    float2 TexCoords :  TEXCOORD;
+    int TextureIndex :  TEXINDEX;
+    float Progress :    PROGRESS;
+    float Alpha :       ALPHA;
 };
 
 //--------------------------------------------------------------------------------------
@@ -41,13 +44,6 @@ SamplerState samAnisotropic
     AddressV = Wrap;
 };
 
-SamplerState samLinearClamp
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
-
 //--------------------------------------------------------------------------------------
 // Rasterizer states
 //--------------------------------------------------------------------------------------
@@ -58,7 +54,7 @@ RasterizerState rsCullNone
 };
 
 //--------------------------------------------------------------------------------------
-// DepthStates
+// States
 //--------------------------------------------------------------------------------------
 
 DepthStencilState EnableDepth
@@ -97,36 +93,64 @@ void SpriteGS(point SpriteVertex input[1], inout TriangleStream<PSVertex> stream
     v.Position = mul(float4(curr.Position - curr.Radius * g_CameraRight.xyz - curr.Radius * g_CameraUp.xyz, 1.0f), g_ViewProjection);
     v.TextureIndex = curr.TextureIndex;
     v.TexCoords = float2(0, 0);
+    v.Progress = curr.Progress;
+    v.Alpha = curr.Alpha;
     stream.Append(v);
     // Top left
     v.Position = mul(float4(curr.Position - curr.Radius * g_CameraRight.xyz + curr.Radius * g_CameraUp.xyz, 1.0f), g_ViewProjection);
     v.TextureIndex = curr.TextureIndex;
     v.TexCoords = float2(0, 1);
+    v.Progress = curr.Progress;
+    v.Alpha = curr.Alpha;
     stream.Append(v);
     // Bottom right
     v.Position = mul(float4(curr.Position + curr.Radius * g_CameraRight.xyz - curr.Radius * g_CameraUp.xyz, 1.0f), g_ViewProjection);
     v.TextureIndex = curr.TextureIndex;
     v.TexCoords = float2(1, 0);
+    v.Progress = curr.Progress;
+    v.Alpha = curr.Alpha;
     stream.Append(v);
     // Top right
     v.Position = mul(float4(curr.Position + curr.Radius * g_CameraRight.xyz + curr.Radius * g_CameraUp.xyz, 1.0f), g_ViewProjection);
     v.TextureIndex = curr.TextureIndex;
     v.TexCoords = float2(1, 1);
+    v.Progress = curr.Progress;
+    v.Alpha = curr.Alpha;
     stream.Append(v);
 }
 
 // Samples from texture
 float4 SpritePS(PSVertex input) : SV_Target0
 {
+    float4 dims, col;
+    // Switch over texture arrays (select texture based in index and progress)
     switch (input.TextureIndex)
     {
         case 0:
-            return g_SpriteTexture[0].Sample(samLinearClamp, input.TexCoords);
+            g_Textures[0].GetDimensions(dims.x, dims.y, dims.z);
+            col = g_Textures[0].Sample(samAnisotropic, float3(input.TexCoords.xy, input.Progress * dims.z));
+            break;
         case 1:
-            return g_SpriteTexture[1].Sample(samLinearClamp, input.TexCoords);
+            g_Textures[1].GetDimensions(dims.x, dims.y, dims.z);
+            col = g_Textures[1].Sample(samAnisotropic, float3(input.TexCoords.xy, input.Progress * dims.z));
+            break;
+        case 2:
+            g_Textures[2].GetDimensions(dims.x, dims.y, dims.z);
+            col = g_Textures[2].Sample(samAnisotropic, float3(input.TexCoords.xy, input.Progress * dims.z));
+            break;
+        case 3:
+            g_Textures[3].GetDimensions(dims.x, dims.y, dims.z);
+            col = g_Textures[3].Sample(samAnisotropic, float3(input.TexCoords.xy, input.Progress * dims.z));
+            break;
+        case 4:
+            g_Textures[4].GetDimensions(dims.x, dims.y, dims.z);
+            col = g_Textures[4].Sample(samAnisotropic, float3(input.TexCoords.xy, input.Progress * dims.z));
+            break;
         default:
-            return float4(0, 0, 0, 1);
+            break;
     }
+    // Return with applied alpha
+    return float4(col.rgb, col.a * input.Alpha);
 }
 
 //--------------------------------------------------------------------------------------

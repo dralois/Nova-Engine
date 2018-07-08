@@ -34,7 +34,7 @@ HRESULT SpriteRenderer::reloadShader(ID3D11Device * pDevice)
 
 	// Store the view projection matrix and vectors
 	SAFE_GET_MATRIX(m_pEffect, "g_ViewProjection", m_pViewProjectionMatrix);
-	SAFE_GET_RESOURCE(m_pEffect, "g_SpriteTexture", m_pSpriteTexture2D);
+	SAFE_GET_RESOURCE(m_pEffect, "g_Textures", m_pTextureArray2D);
 	SAFE_GET_VECTOR(m_pEffect, "g_CameraRight", m_pCameraRight);
 	SAFE_GET_VECTOR(m_pEffect, "g_CameraUp", m_pCameraUp);
 
@@ -65,9 +65,11 @@ HRESULT SpriteRenderer::create(ID3D11Device * pDevice)
 	// Define the input layout
 	const D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		{ "POSITION",	 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "RADIUS",	     0, DXGI_FORMAT_R32_FLOAT,		 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXINDEX",	 0, DXGI_FORMAT_R32_SINT,		 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"RADIUS",		0, DXGI_FORMAT_R32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXINDEX",	0, DXGI_FORMAT_R32_SINT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"PROGRESS",	0, DXGI_FORMAT_R32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"ALPHA",		0, DXGI_FORMAT_R32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	UINT numElements = sizeof(layout) / sizeof(layout[0]);
 
@@ -104,7 +106,7 @@ HRESULT SpriteRenderer::create(ID3D11Device * pDevice)
 void SpriteRenderer::destroy()
 {
 	// Release all resources
-	SAFE_RELEASE(m_pSpriteTexture2D);
+	SAFE_RELEASE(m_pTextureArray2D);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pEffect);
@@ -156,7 +158,7 @@ void SpriteRenderer::renderSprites(ID3D11DeviceContext* context,
 	V(m_pViewProjectionMatrix->SetMatrix((float*)&mViewProj));
 
 	// Set texture array
-	V(m_pSpriteTexture2D->SetResourceArray(&m_pSpriteSRV[0], 0, m_pSpriteSRV.size()));
+	V(m_pTextureArray2D->SetResourceArray(&m_pSpriteSRV[0], 0, m_pSpriteSRV.size()));
 
 	// Apply the changes
 	V(pass->Apply(0, context));

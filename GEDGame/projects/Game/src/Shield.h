@@ -10,8 +10,6 @@
 #include "GameEffect.h"
 #include "Util.cpp"
 
-#include "debug.h"
-
 // Shield vertex
 struct ShieldVertexIn {
 	DirectX::XMVECTOR Position;
