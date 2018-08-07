@@ -1,0 +1,77 @@
+newmtl alienTree1LeafShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 1.30
+newmtl alienTree1ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd crazy_tree_m_diffuse.png
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 1.30
+newmtl birchDead1ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd birch_diffuse.png
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 1.30
+newmtl fallBirch2LeafShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 0.52
+newmtl fallBirch2ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 0.69 0.77 1.00
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 0.52
+newmtl mapleCluster1LeafShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd maple_leaf_m_diffuse.png
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 8.00
+newmtl mapleCluster1ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd maple_m_diffuse.png
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 8.00
+newmtl redwoodDead1ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 8.00
+newmtl treeBare1ShaderSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd bare_diffuse.png
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 8.00

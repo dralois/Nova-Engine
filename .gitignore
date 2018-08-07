@@ -267,9 +267,5 @@ paket-files/
 __pycache__/
 *.pyc
 
-# GED tools
-!/Tools/**
-!/art/**
-
 # Debug resources
-/GEDGame/projects/Game/resources
+/Codebase/Projects/Game/resources

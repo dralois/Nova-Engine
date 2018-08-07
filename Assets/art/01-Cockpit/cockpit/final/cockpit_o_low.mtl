@@ -1,0 +1,22 @@
+newmtl blinn1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd cockpit_m_diffuse.png
+map_Ka cockpit_m_glow.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+map_Ks cockpit_m_specular.png
+Ns 0.06
+newmtl cockpit_m_blinn1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd cockpit_m_diffuse.png
+map_Ka cockpit_m_glow.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+map_Ks cockpit_m_diffuse.png
+Ns 0.06
