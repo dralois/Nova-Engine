@@ -143,12 +143,12 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);    
 
 	// Bind the various textures
-	V(g_gameEffect.g_pDiffuseTexture2D->SetResource(diffuseTextureSRV));
-	V(g_gameEffect.g_pTerrainNormalTexture2D->SetResource(normalTextureSRV));
-	V(g_gameEffect.g_pTerrainHeightTexture2D->SetResource(heightBufferSRV));
+	V(g_3DRenderEffect.g_pDiffuseTexture2D->SetResource(diffuseTextureSRV));
+	V(g_3DRenderEffect.g_pNormalTexture2D->SetResource(normalTextureSRV));
+	V(g_3DRenderEffect.g_pTerrainHeightTexture2D->SetResource(heightBufferSRV));
 
 	// Set the resolution
-	V(g_gameEffect.g_pTerrainResolution->SetInt(iResolution));
+	V(g_3DRenderEffect.g_pTerrainResolution->SetInt(iResolution));
 
     // Apply the rendering pass in order to submit the necessary render state changes to the device
     V(pass->Apply(0, context));

@@ -6,7 +6,7 @@
 #include <DDSTextureLoader.h>
 
 #include "ConfigParser.h"
-#include "GameEffect.h"
+#include "3DRenderer.h"
 #include "SimpleImage.h"
 #include "Util.cpp"
 

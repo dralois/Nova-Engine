@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ConfigParser.h"
 #include "d3dx11effect.h"
 #include "SDKmisc.h"
 #include "DXUT.h"
@@ -37,24 +38,26 @@ struct GameEffect
 	ID3DX11EffectShaderResourceVariable*    g_pDiffuseTexture2D;		// Texture for the diffuse color
 	ID3DX11EffectShaderResourceVariable*    g_pSpecularTexture2D;		// Texture for the specular color
 	ID3DX11EffectShaderResourceVariable*    g_pGlowTexture2D;			// Texture for the glow color
+	ID3DX11EffectShaderResourceVariable*	g_pNormalTexture2D;			// Texture for normals
 
 	ID3DX11EffectVectorVariable*			g_pHitArray;				// Array of shield hits
 	ID3DX11EffectScalarVariable*			g_pFarPlaneDist;			// Far plane distance
 	ID3DX11EffectShaderResourceVariable*    g_pDepthBuffer2D;			// Texture for the glow color
 
 	ID3DX11EffectShaderResourceVariable*	g_pTerrainHeightTexture2D;	// Heightmap texture
-	ID3DX11EffectShaderResourceVariable*	g_pTerrainNormalTexture2D;	// Normalmap texture
 	ID3DX11EffectScalarVariable*			g_pTerrainResolution;		// Resolution of the terrain
 
 	GameEffect() { ZeroMemory(this, sizeof(*this)); }
 
-	HRESULT create(ID3D11Device* device)
+	HRESULT create(ID3D11Device* device, ConfigParser parser)
 	{
 		HRESULT hr;
 		WCHAR path[MAX_PATH];
 
 		// Find and load the rendering effect
-		V_RETURN(DXUTFindDXSDKMediaFileCch(path, MAX_PATH, L"shader\\3DRenderer.fxo"));
+		std::string shaderFolder = parser.GetShaderFolder();
+		std::wstring shaderPath = std::wstring(shaderFolder.begin(), shaderFolder.end()) + L"3DRenderer.fxo";
+		V_RETURN(DXUTFindDXSDKMediaFileCch(path, MAX_PATH, shaderPath.c_str()));
 		std::ifstream is(path, std::ios_base::binary);
 		is.seekg(0, std::ios_base::end);
 		std::streampos pos = is.tellg();
@@ -73,25 +76,27 @@ struct GameEffect
 		SAFE_GET_PASS(g_pTechnique, "P1_Mesh", g_pMeshPass1);
 		SAFE_GET_PASS(g_pTechnique, "P2_Shield", g_pShieldPass2);
 
-		// Obtain the effect variables
+		// Obtain vars for general math
 		SAFE_GET_MATRIX(g_pEffect, "g_World", g_pWorldMatrix);
 		SAFE_GET_MATRIX(g_pEffect, "g_WorldNormals", g_pWorldNormalMatrix);
-		SAFE_GET_MATRIX(g_pEffect, "g_WorldViewProjection", g_pWorldViewProjMatrix);   
+		SAFE_GET_MATRIX(g_pEffect, "g_WorldViewProjection", g_pWorldViewProjMatrix);
 		SAFE_GET_VECTOR(g_pEffect, "g_LightDir", g_pLightDirVector);
 		SAFE_GET_VECTOR(g_pEffect, "g_CameraPos", g_pCameraPosWorld);
+		// Obtain vars for textures
 		SAFE_GET_RESOURCE(g_pEffect, "g_Diffuse", g_pDiffuseTexture2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Specular", g_pSpecularTexture2D);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Glow", g_pGlowTexture2D);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Normal", g_pNormalTexture2D);
+		// Obtain vars for the shield effect
 		SAFE_GET_VECTOR(g_pEffect, "g_Hits", g_pHitArray);
 		SAFE_GET_SCALAR(g_pEffect, "g_FarPlaneDist", g_pFarPlaneDist);
 		SAFE_GET_RESOURCE(g_pEffect, "g_Depth", g_pDepthBuffer2D);
+		// Obtain vars for the terrain
 		SAFE_GET_RESOURCE(g_pEffect, "g_HeightMap", g_pTerrainHeightTexture2D);
-		SAFE_GET_RESOURCE(g_pEffect, "g_NormalMap", g_pTerrainNormalTexture2D);
 		SAFE_GET_SCALAR(g_pEffect, "g_TerrainRes", g_pTerrainResolution);
 
 		return S_OK;
 	}
-
 
 	void destroy()
 	{
@@ -99,4 +104,4 @@ struct GameEffect
 	}
 };
 
-extern GameEffect g_gameEffect;
+extern GameEffect g_3DRenderEffect;

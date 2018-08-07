@@ -10,28 +10,26 @@
 class Mesh
 {
 public:
-	//Create mesh object and set filenames, but don't create D3D11 resources
-	//This constructor should be called from within InitApp().
-	Mesh(const std::string& filename_t3d,           //filename of t3d file for mesh geometry
-         const std::string& filename_dds_diffuse,   //filename of dds file for diffuse texture
-         const std::string& filename_dds_specular,  //filename of dds file for specular texture
-         const std::string& filename_dds_glow);     //filename of dds file for glow texture
+	//Create mesh object and set filenames
+	Mesh(	const std::string& filename_t3d,			// Filename of mesh geometry
+			const std::string& filename_dds_diffuse,	// Filename of diffuse texture
+			const std::string& filename_dds_specular,	// Filename of specular texture
+			const std::string& filename_dds_glow,		// Filename of glow texture
+			const std::string& filename_dds_normal);	// Filename of normal texture
 		 
-	Mesh(const std::wstring& filename_t3d,           //filename of t3d file for mesh geometry
-		const std::wstring& filename_dds_diffuse,   //filename of dds file for diffuse texture
-		const std::wstring& filename_dds_specular,  //filename of dds file for specular texture
-		const std::wstring& filename_dds_glow);     //filename of dds file for glow texture
+	Mesh(	const std::wstring& filename_t3d,			// Filename of mesh geometry
+			const std::wstring& filename_dds_diffuse,	// Filename of diffuse texture
+			const std::wstring& filename_dds_specular,	// Filename of specular texture
+			const std::wstring& filename_dds_glow,		// Filename of glow texture
+			const std::wstring& filename_dds_normal);	// Filename of normal texture
 
-	//Currently does nothing.
-	//This destructor should be called from within DeinitApp().
+	//Currently does nothing
 	~Mesh(void);
 
-	//Creates the required D3D11 resources from the given input files.
-	//This function should be called from within OnD3D11CreateDevice().
+	//Creates the required D3D11 resources from the given input files
 	HRESULT create(ID3D11Device* device);
 
-	//Releases all D3D11 resources of the mesh.
-	//This destructor should be called from within OnD3D11DestroyDevice().
+	//Releases all D3D11 resources of the mesh
 	void destroy();
 
 	// Creates an input layout which is used for meshes
@@ -41,39 +39,42 @@ public:
 	static void destroyInputLayout();
 
 	// Render the mesh
-	HRESULT render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
-        ID3DX11EffectShaderResourceVariable* diffuseEffectVariable,
-        ID3DX11EffectShaderResourceVariable* specularEffectVariable,
-        ID3DX11EffectShaderResourceVariable* glowEffectVariable);
+	HRESULT render(	ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
+					ID3DX11EffectShaderResourceVariable* diffuseEffectVariable,
+					ID3DX11EffectShaderResourceVariable* specularEffectVariable,
+					ID3DX11EffectShaderResourceVariable* glowEffectVariable,
+					ID3DX11EffectShaderResourceVariable* normalEffectVariable);
 
 private:
-	//Reads the complete file given by "path" byte-wise into "data".
+	// Reads the complete file given by "path" byte-wise into "data".
 	static HRESULT loadFile(const char * filename, std::vector<uint8_t>& data);
 
 	// Creates DX Texture Resources from File
-	static HRESULT createTexture(ID3D11Device* device, const std::wstring& filename, 
-		ID3D11Texture2D** tex, ID3D11ShaderResourceView** srv);
+	static HRESULT createTexture(	ID3D11Device* device, const std::wstring& filename, 
+									ID3D11Texture2D** tex, ID3D11ShaderResourceView** srv);
 	
 private:
-	//Filenames
-	std::wstring				filenameT3d;
-	std::wstring				filenameDDSDiffuse;
-	std::wstring				filenameDDSSpecular;
-	std::wstring				filenameDDSGlow;
+	// Filenames
+	std::wstring				m_sFilenameT3d;
+	std::wstring				m_sFilenameDDSDiffuse;
+	std::wstring				m_sFilenameDDSSpecular;
+	std::wstring				m_sFilenameDDSGlow;
 
-	//Mesh geometry information
-	ID3D11Buffer*               vertexBuffer;
-	ID3D11Buffer*               indexBuffer;
-	int                         indexCount; //number of single indices in indexBuffer (needed for DrawIndexed())
+	// Mesh geometry information
+	ID3D11Buffer*               m_pVertexBuffer;
+	ID3D11Buffer*               m_pIndexBuffer;
+	int                         m_iIndexCount;
 
-	//Mesh textures and corresponding shader resource views
-	ID3D11Texture2D*            diffuseTex;
-	ID3D11ShaderResourceView*   diffuseSRV;
-	ID3D11Texture2D*            specularTex;
-	ID3D11ShaderResourceView*   specularSRV;
-	ID3D11Texture2D*	        glowTex;
-	ID3D11ShaderResourceView*   glowSRV;
+	// Mesh textures and corresponding shader resource views
+	ID3D11Texture2D*            m_pDiffuseTex;
+	ID3D11ShaderResourceView*   m_pDiffuseSRV;
+	ID3D11Texture2D*            m_pSpecularTex;
+	ID3D11ShaderResourceView*   m_pSpecularSRV;
+	ID3D11Texture2D*	        m_pGlowTex;
+	ID3D11ShaderResourceView*   m_pGlowSRV;
+	ID3D11Texture2D*	        m_pNormalTex;
+	ID3D11ShaderResourceView*   m_pNormalSRV;
 
-	//Mesh Input layout
-	static ID3D11InputLayout*	inputLayout;
+	// Mesh input layout
+	static ID3D11InputLayout*	m_pInputLayout;
 };

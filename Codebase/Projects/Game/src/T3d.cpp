@@ -10,15 +10,14 @@ struct T3dHeader {
 	int16_t version;     // Must be 1 
 	int32_t verticesSize;  // vertex buffer data size 
 	int32_t indicesSize;   // index buffer data size 
-}; // Sizes are always in bytes
+};
 
 HRESULT T3d::readFromFile(const std::string& filename, std::vector<T3dVertex>& vertexBufferData, 
                                         std::vector<uint32_t>& indexBufferData)
 {
-	HRESULT hr;
     // Open the file
     FILE* file;
-	/*errno_t error =*/ fopen_s(&file, filename.c_str(), "rb");
+	fopen_s(&file, filename.c_str(), "rb");
 	if (file == nullptr) {
         MessageBoxA (NULL, (std::string("Could not open ") + filename).c_str(), "File error", MB_ICONERROR | MB_OK);
 		return E_FAIL;
@@ -57,6 +56,7 @@ HRESULT T3d::readFromFile(const std::string& filename, std::vector<T3dVertex>& v
 	indexBufferData.resize(header.indicesSize / sizeof(uint32_t));
 	fread(&indexBufferData[0], sizeof(uint32_t), indexBufferData.size(), file);
 
+	// Close file
 	fclose(file);
 
 	return S_OK;
@@ -66,10 +66,9 @@ HRESULT T3d::readFromFile(const std::string& filename, std::vector<T3dVertex>& v
 HRESULT T3d::readFromFile(const std::wstring& filename, std::vector<T3dVertex>& vertexBufferData, 
                                         std::vector<uint32_t>& indexBufferData)
 {
-	HRESULT hr;
     // Open the file
     FILE* file;
-	/*errno_t error =*/ _wfopen_s(&file, filename.c_str(), L"rb");
+	_wfopen_s(&file, filename.c_str(), L"rb");
 	if (file == nullptr) {
         MessageBoxW (NULL, (std::wstring(L"Could not open ") + filename).c_str(), L"File error", MB_ICONERROR | MB_OK);
 		return E_FAIL;
@@ -108,6 +107,7 @@ HRESULT T3d::readFromFile(const std::wstring& filename, std::vector<T3dVertex>& 
 	indexBufferData.resize(header.indicesSize / sizeof(uint32_t));
 	fread(&indexBufferData[0], sizeof(uint32_t), indexBufferData.size(), file);
 
+	// Close file
 	fclose(file);
 
 	return S_OK;
@@ -133,7 +133,7 @@ HRESULT T3d::createT3dInputLayout(ID3D11Device* pd3dDevice,
 	D3DX11_PASS_DESC pd;
 	V_RETURN(pass->GetDesc(&pd));
 	V_RETURN( pd3dDevice->CreateInputLayout( layout, numElements, pd.pIAInputSignature,
-			  pd.IAInputSignatureSize, t3dInputLayout ) );
+			  pd.IAInputSignatureSize, t3dInputLayout));
 
 	return S_OK;
 }

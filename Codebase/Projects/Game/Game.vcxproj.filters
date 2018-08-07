@@ -18,12 +18,6 @@
     <ClInclude Include="src\Terrain.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\GameEffect.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="src\debug.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="src\Mesh.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -34,6 +28,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\Shield.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\3DRenderer.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Debug.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

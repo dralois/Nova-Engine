@@ -261,8 +261,8 @@ exit 1</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\ConfigParser.h" />
-    <ClInclude Include="src\debug.h" />
-    <ClInclude Include="src\GameEffect.h" />
+    <ClInclude Include="src\3DRenderer.h" />
+    <ClInclude Include="src\Debug.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Shield.h" />
     <ClInclude Include="src\SpriteRenderer.h" />

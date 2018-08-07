@@ -7,7 +7,7 @@
 #include <d3dx11effect.h>
 #include <DDSTextureLoader.h>
 
-#include "GameEffect.h"
+#include "3DRenderer.h"
 #include "Util.cpp"
 
 // Shield vertex

@@ -14,7 +14,7 @@
 
 #include "Util.cpp"
 #include "ConfigParser.h"
-#include "GameEffect.h"
+#include "3DRenderer.h"
 
 #include "debug.h"
 
