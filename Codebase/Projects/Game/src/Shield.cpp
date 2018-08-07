@@ -85,7 +85,7 @@ HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
 	m_iVertexCount = l_arrSphere.size();
 
 	// Create texture
-	V(DirectX::CreateDDSTextureFromFile(pDevice, L"resources\\wasser12.DDS", (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
+	V(DirectX::CreateDDSTextureFromFile(pDevice, L"resources\\shield01.DDS", (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
 
 	return S_OK;
 }

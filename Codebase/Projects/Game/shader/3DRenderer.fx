@@ -165,7 +165,7 @@ float4 TerrainPS(TerrainVertexPSIn Input) : SV_Target0
 {
     float3 n;
     // Restore normal xz value (stored in xy in the normalmap)
-    n.xz = (g_NormalMap.Sample(samAnisotropic, Input.Tex).xyz * 2.0f).xy - 1.0f;
+    n.xz = (g_NormalMap.Sample(samAnisotropic, Input.Tex).xy * 2.0f).xy - 1.0f;
     // Restore y component (always points up, so always positive)
     n.y = sqrt(1.0f - pow(n.x, 2.0f) - pow(n.z, 2.0f));
     // Project and normalize again

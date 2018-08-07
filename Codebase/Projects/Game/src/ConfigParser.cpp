@@ -77,8 +77,8 @@ void ConfigParser::Load(string filename)
 			{
 				l_strSrc >> name;
 				meshDictionary[name].Identifier = name;
-				l_strSrc >> meshDictionary[name].File >> meshDictionary[name].Diffuse >> 
-					meshDictionary[name].Specular >> meshDictionary[name].Glow;
+				l_strSrc >> meshDictionary[name].File >> meshDictionary[name].Diffuse >>
+					meshDictionary[name].Specular >> meshDictionary[name].Glow >> meshDictionary[name].Normal;
 			}
 			else if (name == "RenderObject")
 			{
