@@ -3,11 +3,12 @@
 //--------------------------------------------------------------------------------------
 
 Buffer<float>   g_HeightMap;    // Buffer for height values
-Texture2D       g_Diffuse;      // Material albedo for diffuse lighting
-Texture2D       g_Specular;     // Specular texture
-Texture2D       g_Glow;         // Glow texture
+Texture2D       g_Diffuse;      // Diffuse albedo color texture
+Texture2D       g_Specular;     // Specular reflection texture
+Texture2D       g_Glow;         // Glow emission texture
 Texture2D       g_Normal;       // Normalmap for lighting
-Texture2D       g_Depth;        // Depth buffer as texture
+Texture2D       g_Transparency; // Transparency texture
+Texture2D       g_Depth;        // Depth buffer texture
 
 //--------------------------------------------------------------------------------------
 // Constant buffers
@@ -130,6 +131,15 @@ BlendState NoBlending
     BlendEnable[0] = FALSE;
 };
 
+BlendState BSBlendOver
+{
+    BlendEnable[0] = TRUE;
+    SrcBlend[0] = SRC_ALPHA;
+    SrcBlendAlpha[0] = ONE;
+    DestBlend[0] = INV_SRC_ALPHA;
+    DestBlendAlpha[0] = INV_SRC_ALPHA;
+};
+
 // Simple additive blending
 BlendState BSBlendShield
 {
@@ -182,13 +192,14 @@ float4 TerrainPS(TerrainVertexPSIn Input) : SV_Target0
 T3dVertexPSIn MeshVS(T3dVertexVSIn Input)
 {
     T3dVertexPSIn output = (T3dVertexPSIn) 0;
-    // Transform into worldspace
+    // Transform into viewspace
     output.Pos = mul(float4(Input.Pos, 1), g_WorldViewProjection);
     output.Tex = Input.Tex;
-    // Transform world coordinates
+    // Transform position into worldspace
     output.PosWorld = mul(float4(Input.Pos, 1), g_World).xyz;
+    // Transform normal and tangent into worldspace
     output.NorWorld = normalize(mul(float4(Input.Nor, 0), g_WorldNormals).xyz);
-    output.TanWorld = normalize(mul(float4(Input.Tan, 0), g_World).xyz);
+    output.TanWorld = normalize(mul(float4(Input.Tan, 0), g_World).xyz);    
     // Return to pixel shader
     return output;
 }
@@ -205,22 +216,38 @@ float4 MeshPS(T3dVertexPSIn Input) : SV_Target0
     float4 matDiffuse = g_Diffuse.Sample(samAnisotropic, Input.Tex);
     float4 matSpecular = g_Specular.Sample(samAnisotropic, Input.Tex);
     float4 matGlow = g_Glow.Sample(samAnisotropic, Input.Tex);
+    float transparency = g_Transparency.Sample(samAnisotropic, Input.Tex);
+    transparency = transparency > 0 ? transparency : 1;
     // Light and ambient color are white and not dynamic
     float4 colLight = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    float4 colLightAmbient = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float4 colLightAmbient = float4(1.0f, 1.0f, 1.0f, 1.0f);  
     // Calculate normal
-    float3 n = normalize(Input.NorWorld);
+    float3 nor = normalize(Input.NorWorld);
+    // Calculate tangent
+    float3 tan = normalize(Input.TanWorld - (nor * dot(nor, Input.TanWorld)));
+    // Calculate bitangent
+    float3 biTan = cross(tan, nor);
+    // Store in transformation matrix
+    float3x3 TBN = float3x3(tan, biTan, nor);
+    // Load and calculate normal
+    float3 normal;
+    // Restore normal xz value (stored in xy in the normalmap)
+    normal.xz = (g_Normal.Sample(samAnisotropic, Input.Tex).xy * 2.0f).xy - 1.0f;
+    // Restore y component (always points up, so always positive)
+    normal.y = sqrt(1.0f - pow(normal.x, 2.0f) - pow(normal.z, 2.0f));
+    // Transform normal and renormalize
+    normal = normalize(mul(TBN, normal));
     // Store light direction
-    float3 l = g_LightDir.xyz;
+    float3 lightDir = g_LightDir.xyz;
     // Calculate reflection
-    float3 r = reflect(-l, n);
+    float3 reflectDir = reflect(-lightDir, normal);
     // Calculate view
-    float3 v = normalize(g_CameraPos.xyz - Input.PosWorld);
+    float3 viewDir = normalize(g_CameraPos.xyz - Input.PosWorld);
     // Return the phong color
-    return (cd * matDiffuse * saturate(dot(n, g_LightDir.xyz)) * colLight +
-            cs * matSpecular * pow(saturate(dot(r, v)), 5) * colLight +
-            ca * matDiffuse * colLightAmbient + 
-            cg * matGlow);
+    return float4((cd * matDiffuse * saturate(dot(normal, g_LightDir.xyz)) * colLight +
+                    cs * matSpecular * pow(saturate(dot(reflectDir, viewDir)), 5) * colLight +
+                    ca * matDiffuse * colLightAmbient +
+                    cg * matGlow).rgb, transparency);
 }
 
 // Shield vertex shader
@@ -306,7 +333,7 @@ technique11 Render
         
         SetRasterizerState(rsCullBack);
         SetDepthStencilState(EnableDepth, 0);
-        SetBlendState(NoBlending, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
+        SetBlendState(BSBlendOver, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
     }
     // Shield pass
     pass P2_Shield

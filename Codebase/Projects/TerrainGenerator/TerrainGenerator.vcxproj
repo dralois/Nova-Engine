@@ -18,6 +18,15 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\DiamondSquare.h" />
+    <ClInclude Include="src\NormalsTexturesGen.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\DiamondSquare.cpp" />
+    <ClCompile Include="src\NormalsTexturesGen.cpp" />
+    <ClCompile Include="src\TerrainGenerator.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{83219906-A193-4922-B7DA-D97383A1291A}</ProjectGuid>
@@ -162,15 +171,6 @@
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;GEDUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="DiamondSquare.cpp" />
-    <ClCompile Include="NormalsTexturesGen.cpp" />
-    <ClCompile Include="TerrainGenerator.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="DiamondSquare.h" />
-    <ClInclude Include="NormalsTexturesGen.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

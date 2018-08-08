@@ -24,6 +24,7 @@ public:
 		string Specular;
 		string Glow;
 		string Normal;
+		string Transparency;
 	};
 
 	// Saves transformation configurations for objects that need to be rendered

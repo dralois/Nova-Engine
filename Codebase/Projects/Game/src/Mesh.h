@@ -11,17 +11,19 @@ class Mesh
 {
 public:
 	//Create mesh object and set filenames
-	Mesh(	const std::string& filename_t3d,			// Filename of mesh geometry
-			const std::string& filename_dds_diffuse,	// Filename of diffuse texture
-			const std::string& filename_dds_specular,	// Filename of specular texture
-			const std::string& filename_dds_glow,		// Filename of glow texture
-			const std::string& filename_dds_normal);	// Filename of normal texture
+	Mesh(	const std::string& filename_t3d,				// Filename of mesh geometry
+			const std::string& filename_dds_diffuse,		// Filename of diffuse texture
+			const std::string& filename_dds_specular,		// Filename of specular texture
+			const std::string& filename_dds_glow,			// Filename of glow texture
+			const std::string& filename_dds_normal,			// Filename of normal texture
+			const std::string& filename_dds_transparency);	// Filename of transparency texture
 		 
-	Mesh(	const std::wstring& filename_t3d,			// Filename of mesh geometry
-			const std::wstring& filename_dds_diffuse,	// Filename of diffuse texture
-			const std::wstring& filename_dds_specular,	// Filename of specular texture
-			const std::wstring& filename_dds_glow,		// Filename of glow texture
-			const std::wstring& filename_dds_normal);	// Filename of normal texture
+	Mesh(	const std::wstring& filename_t3d,				// Filename of mesh geometry
+			const std::wstring& filename_dds_diffuse,		// Filename of diffuse texture
+			const std::wstring& filename_dds_specular,		// Filename of specular texture
+			const std::wstring& filename_dds_glow,			// Filename of glow texture
+			const std::wstring& filename_dds_normal,			// Filename of normal texture
+			const std::wstring& filename_dds_transparency);	// Filename of transparency texture
 
 	//Currently does nothing
 	~Mesh(void);
@@ -43,7 +45,8 @@ public:
 					ID3DX11EffectShaderResourceVariable* diffuseEffectVariable,
 					ID3DX11EffectShaderResourceVariable* specularEffectVariable,
 					ID3DX11EffectShaderResourceVariable* glowEffectVariable,
-					ID3DX11EffectShaderResourceVariable* normalEffectVariable);
+					ID3DX11EffectShaderResourceVariable* normalEffectVariable,
+					ID3DX11EffectShaderResourceVariable* transparencyEffectVariable);
 
 private:
 	// Reads the complete file given by "path" byte-wise into "data".
@@ -59,6 +62,8 @@ private:
 	std::wstring				m_sFilenameDDSDiffuse;
 	std::wstring				m_sFilenameDDSSpecular;
 	std::wstring				m_sFilenameDDSGlow;
+	std::wstring				m_sFilenameDDSNormal;
+	std::wstring				m_sFilenameDDSTransparency;
 
 	// Mesh geometry information
 	ID3D11Buffer*               m_pVertexBuffer;
@@ -74,6 +79,8 @@ private:
 	ID3D11ShaderResourceView*   m_pGlowSRV;
 	ID3D11Texture2D*	        m_pNormalTex;
 	ID3D11ShaderResourceView*   m_pNormalSRV;
+	ID3D11Texture2D*	        m_pTransparencyTex;
+	ID3D11ShaderResourceView*   m_pTransparencySRV;
 
 	// Mesh input layout
 	static ID3D11InputLayout*	m_pInputLayout;

@@ -75,11 +75,13 @@ mkdir "$(OutDir)resources"
 echo.
 echo Building cockpit models..
 echo.
-"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_low.obj" -o "$(OutDir)resources\cockpit_low.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_base.obj" -o "$(OutDir)resources\cockpit_base.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glass.obj" -o "$(OutDir)resources\cockpit_glass.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_diffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_specular.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glow.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC5_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_normal.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC4_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_transparency.png"
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_base.obj" -o "$(OutDir)resources\gatling_base.t3d" -y
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_top.obj" -o "$(OutDir)resources\gatling_top.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_diffuse.png"
@@ -148,11 +150,13 @@ mkdir "$(OutDir)resources"
 echo.
 echo Building cockpit models..
 echo.
-"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_low.obj" -o "$(OutDir)resources\cockpit_low.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_base.obj" -o "$(OutDir)resources\cockpit_base.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glass.obj" -o "$(OutDir)resources\cockpit_glass.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_diffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_specular.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glow.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC5_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_normal.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC4_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_transparency.png"
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_base.obj" -o "$(OutDir)resources\gatling_base.t3d" -y
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_top.obj" -o "$(OutDir)resources\gatling_top.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_diffuse.png"
@@ -221,11 +225,13 @@ mkdir "$(OutDir)resources"
 echo.
 echo Building cockpit models..
 echo.
-"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_low.obj" -o "$(OutDir)resources\cockpit_low.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_base.obj" -o "$(OutDir)resources\cockpit_base.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glass.obj" -o "$(OutDir)resources\cockpit_glass.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_diffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_specular.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glow.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC5_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_normal.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC4_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_transparency.png"
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_base.obj" -o "$(OutDir)resources\gatling_base.t3d" -y
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_top.obj" -o "$(OutDir)resources\gatling_top.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_diffuse.png"
@@ -294,11 +300,13 @@ mkdir "$(OutDir)resources"
 echo.
 echo Building cockpit models..
 echo.
-"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_low.obj" -o "$(OutDir)resources\cockpit_low.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_base.obj" -o "$(OutDir)resources\cockpit_base.t3d" -y
+"$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glass.obj" -o "$(OutDir)resources\cockpit_glass.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_diffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_specular.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_glow.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC5_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_normal.png"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC4_UNORM "$(SolutionDir)..\Assets\art\01-Cockpit\cockpit\cockpit_transparency.png"
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_base.obj" -o "$(OutDir)resources\gatling_base.t3d" -y
 "$(SolutionDir)Tools\obj2t3d.exe" -i "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_top.obj" -o "$(OutDir)resources\gatling_top.t3d" -y
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC1_UNORM_SRGB "$(SolutionDir)..\Assets\art\01-Cockpit\gatling_gun\gatling_diffuse.png"
