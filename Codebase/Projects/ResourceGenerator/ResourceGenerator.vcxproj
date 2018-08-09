@@ -69,7 +69,7 @@
 echo Creating new terrain..
 echo.
 mkdir "$(OutDir)resources"
-"$(OutDir)TerrainGenerator.exe" -r 1024 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
+"$(OutDir)TerrainGenerator.exe" -r 4096 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
 "$(OutDir)texconv" -y -srgbi -f R8G8B8A8_UNORM_SRGB -o "$(OutDir)resources" "$(IntDir)terrain_color.tiff"
 "$(OutDir)texconv" -y -f BC5_UNORM -o "$(OutDir)resources" "$(IntDir)terrain_normal.tiff"
 echo.
@@ -129,10 +129,15 @@ echo Converting Sprites..
 echo.
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailGatlingDiffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailPlasmaDiffuse.png"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\explEnemy.dds"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"</NMakeBuildCommandLine>
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"
+echo.
+echo Creating Skybox..
+echo.
+call "$(SolutionDir)Tools\dirassembler.bat" "cube" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\04-Skybox\03" "$(OutDir)resources\skybox.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\skybox.dds"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo Deleting old resources...
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -144,7 +149,7 @@ del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
 echo Creating new terrain..
 echo.
 mkdir "$(OutDir)resources"
-"$(OutDir)TerrainGenerator.exe" -r 1024 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
+"$(OutDir)TerrainGenerator.exe" -r 4096 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
 "$(OutDir)texconv" -y -srgbi -f R8G8B8A8_UNORM_SRGB -o "$(OutDir)resources" "$(IntDir)terrain_color.tiff"
 "$(OutDir)texconv" -y -f BC5_UNORM -o "$(OutDir)resources" "$(IntDir)terrain_normal.tiff"
 echo.
@@ -204,10 +209,15 @@ echo Converting Sprites..
 echo.
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailGatlingDiffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailPlasmaDiffuse.png"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\explEnemy.dds"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"</NMakeBuildCommandLine>
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"
+echo.
+echo Creating Skybox..
+echo.
+call "$(SolutionDir)Tools\dirassembler.bat" "cube" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\04-Skybox\03" "$(OutDir)resources\skybox.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\skybox.dds"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo Deleting old resources...
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -219,7 +229,7 @@ del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
 echo Creating new terrain..
 echo.
 mkdir "$(OutDir)resources"
-"$(OutDir)TerrainGenerator.exe" -r 1024 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
+"$(OutDir)TerrainGenerator.exe" -r 4096 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
 "$(OutDir)texconv" -y -srgbi -f R8G8B8A8_UNORM_SRGB -o "$(OutDir)resources" "$(IntDir)terrain_color.tiff"
 "$(OutDir)texconv" -y -f BC5_UNORM -o "$(OutDir)resources" "$(IntDir)terrain_normal.tiff"
 echo.
@@ -279,10 +289,15 @@ echo Converting Sprites..
 echo.
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailGatlingDiffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailPlasmaDiffuse.png"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\explEnemy.dds"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"</NMakeBuildCommandLine>
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"
+echo.
+echo Creating Skybox..
+echo.
+call "$(SolutionDir)Tools\dirassembler.bat" "cube" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\04-Skybox\03" "$(OutDir)resources\skybox.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\skybox.dds"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo Deleting old resources...
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
@@ -294,7 +309,7 @@ del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>
 echo Creating new terrain..
 echo.
 mkdir "$(OutDir)resources"
-"$(OutDir)TerrainGenerator.exe" -r 1024 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
+"$(OutDir)TerrainGenerator.exe" -r 4096 -o_height "$(OutDir)resources\terrain_height.tiff" -o_color "$(IntDir)terrain_color.tiff" -o_normal "$(IntDir)terrain_normal.tiff"
 "$(OutDir)texconv" -y -srgbi -f R8G8B8A8_UNORM_SRGB -o "$(OutDir)resources" "$(IntDir)terrain_color.tiff"
 "$(OutDir)texconv" -y -f BC5_UNORM -o "$(OutDir)resources" "$(IntDir)terrain_normal.tiff"
 echo.
@@ -354,10 +369,15 @@ echo Converting Sprites..
 echo.
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailGatlingDiffuse.png"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -srgbi -f BC3_UNORM_SRGB "$(SolutionDir)..\Assets\art\05-Sprites\other\parTrailPlasmaDiffuse.png"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_b" "$(OutDir)resources\explEnemy.dds"
 "$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\explEnemy.dds"
-call "$(SolutionDir)Tools\dirassembler.bat" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
-"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"</NMakeBuildCommandLine>
+call "$(SolutionDir)Tools\dirassembler.bat" "array" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\05-Sprites\explosion_c" "$(OutDir)resources\parEnemy.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\parEnemy.dds"
+echo.
+echo Creating Skybox..
+echo.
+call "$(SolutionDir)Tools\dirassembler.bat" "cube" "$(OutDir)texassemble.exe" "$(SolutionDir)..\Assets\art\04-Skybox\03" "$(OutDir)resources\skybox.dds"
+"$(OutDir)texconv" -y -o "$(OutDir)resources" -f BC3_UNORM_SRGB "$(OutDir)resources\skybox.dds"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>echo Deleting old resources...
 del /Q "$(IntDir)*"
 del /Q "$(OutDir)resources\*"</NMakeCleanCommandLine>

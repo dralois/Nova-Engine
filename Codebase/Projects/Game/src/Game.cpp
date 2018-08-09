@@ -15,7 +15,7 @@
 #include <list>
 #include <time.h>
 
-#include "dxut.h"
+#include "DXUT.h"
 #include "DXUTmisc.h"
 #include "DXUTcamera.h"
 #include "DXUTgui.h"
@@ -27,11 +27,12 @@
 #include "Mesh.h"
 #include "Shield.h"
 #include "Terrain.h"
-#include "3DRenderer.h"
+#include "Sprites.h"
+#include "Effect2D.h"
+#include "Effect3D.h"
 #include "ConfigParser.h"
-#include "SpriteRenderer.h"
 
-#include "debug.h"
+#include "Debug.h"
 
 #define DEG2RAD( a ) ( (a) * XM_PI / 180.f )
 
@@ -89,24 +90,24 @@ struct CAMERAPARAMS {
 
 float                                   g_cameraMoveScaler = 1000.f;
 float                                   g_cameraRotateScaler = 0.01f;
-CFirstPersonCamera                      g_camera;               // A first person camera
+CFirstPersonCamera                      g_camera;
 
-																// User Interface
-CDXUTDialogResourceManager              g_dialogResourceManager; // manager for shared resources of dialogs
-CD3DSettingsDlg                         g_settingsDlg;          // Device settings dialog
+CDXUTDialogResourceManager              g_dialogResourceManager;	// Manager for shared resources of dialogs
+CD3DSettingsDlg                         g_settingsDlg;				// Device settings dialog
 CDXUTTextHelper*                        g_txtHelper = NULL;
-CDXUTDialog                             g_hud;                  // dialog for standard controls
-CDXUTDialog                             g_sampleUI;             // dialog for sample specific controls
+CDXUTDialog                             g_hud;						// Dialog for standard controls
+CDXUTDialog                             g_sampleUI;					// Dialog for sample specific controls
 
-bool                                    g_terrainSpinning = true;
-XMMATRIX                                g_terrainWorld; // object- to world-space transformation
-
+bool                                    g_terrainSpinning = true;	// Camera spinning around the center?
+XMMATRIX                                g_terrainWorld;				// Object- to world-space transformation
 
 // Scene information
 XMVECTOR                                g_lightDir;
 Terrain									g_terrain;
 
-GameEffect								g_3DRenderEffect; // CPU part of Shader
+// EVs
+Effect3D								g_Effect3D;
+Effect2D								g_Effect2D;
 
 // Config information
 ConfigParser							g_configParser;
@@ -123,7 +124,7 @@ list<SpriteInstance>					g_Explosions;
 float									g_spawnTimer = 0.0f;
 
 // Sprite renderer
-SpriteRenderer*							g_spriteRenderer;
+Sprites*								g_Sprites;
 
 // Guns
 vector<GunInstance>						g_Guns;
@@ -186,16 +187,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	DXUTSetCallbackD3D11SwapChainReleasing(OnD3D11ReleasingSwapChain);
 	DXUTSetCallbackD3D11DeviceDestroyed(OnD3D11DestroyDevice);
 	DXUTSetCallbackD3D11FrameRender(OnD3D11FrameRender);
-	//DXUTSetIsInGammaCorrectMode(false);
 
 	InitApp();
-	DXUTInit(true, true, NULL); // Parse the command line, show msgboxes on error, no extra command line params
+	DXUTInit(true, true, NULL);
 	DXUTSetCursorSettings(true, true);
-	DXUTCreateWindow(L"Game"); // You may change the title
+	DXUTCreateWindow(L"NovaEngine");
 
 	DXUTCreateDevice(D3D_FEATURE_LEVEL_10_0, true, 1920, 1080);
 
-	DXUTMainLoop(); // Enter into the DXUT render loop
+	DXUTMainLoop();
 
 	// Shutdown the app
 	DXUTShutdown();
@@ -244,10 +244,8 @@ void InitApp()
 		}
 	}
 
-	// Initialize the sprite renderer
-	g_spriteRenderer = new SpriteRenderer(g_configParser);
-
-	// Initialize the shield renderer
+	// Initialize the sprite & shield renderer
+	g_Sprites = new Sprites();
 	g_EnemyShield = new Shield();
 
 	// Initialize the guns
@@ -297,7 +295,7 @@ void DeinitApp()
 	g_Meshes.clear();
 	g_Transparent.clear();
 	// Delete sprite renderer
-	SAFE_DELETE(g_spriteRenderer);
+	SAFE_DELETE(g_Sprites);
 	// Delete shield renderer
 	SAFE_DELETE(g_EnemyShield);
 }
@@ -362,7 +360,7 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 
 	HRESULT hr;
 
-	ID3D11DeviceContext* pd3dImmediateContext = DXUTGetD3D11DeviceContext(); // http://msdn.microsoft.com/en-us/library/ff476891%28v=vs.85%29
+	ID3D11DeviceContext* pd3dImmediateContext = DXUTGetD3D11DeviceContext();
 	V_RETURN(g_dialogResourceManager.OnD3D11CreateDevice(pd3dDevice, pd3dImmediateContext));
 	V_RETURN(g_settingsDlg.OnD3D11CreateDevice(pd3dDevice));
 	g_txtHelper = new CDXUTTextHelper(pd3dDevice, pd3dImmediateContext, &g_dialogResourceManager, 15);
@@ -376,15 +374,16 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	XMVECTOR vEye = XMVectorSet(0.0f, g_terrain.GetHeightAtXY(0.5, 0.5) * g_configParser.GetTerrainInfo().Height +
 		g_configParser.GetTerrainInfo().Height * 0.5f, 0.0f, 0.0f);		// Camera eye is here
 	XMVECTOR vAt = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);		// ... facing at this position
-	g_camera.SetViewParams(vEye, vAt); // http://msdn.microsoft.com/en-us/library/windows/desktop/bb206342%28v=vs.85%29.aspx
+	g_camera.SetViewParams(vEye, vAt);
 	g_camera.SetScalers(g_cameraRotateScaler, g_cameraMoveScaler);
 
 	// Adjust camera spinning
 	g_terrainSpinning = fabs(g_configParser.GetTerrainInfo().SpinSpeed) > 0.0f;
 
 	// Create input layouts
-	V_RETURN(Mesh::createInputLayout(pd3dDevice, g_3DRenderEffect.g_pMeshPass1));
-	V_RETURN(Shield::createInputLayout(pd3dDevice, g_3DRenderEffect.g_pShieldPass2));
+	V_RETURN(Mesh::createInputLayout(pd3dDevice, g_Effect3D.g_pMeshPass));
+	V_RETURN(Shield::createInputLayout(pd3dDevice, g_Effect3D.g_pShieldPass));
+	V_RETURN(Sprites::createInputLayout(pd3dDevice, g_Effect2D.g_pSpritePass));
 
 	// Create the meshes
 	for (auto it = g_Meshes.begin(); it != g_Meshes.end(); it++) {
@@ -398,7 +397,7 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 	V_RETURN(g_EnemyShield->create(pd3dDevice, 10));
 
 	// Create sprite renderer resources
-	V_RETURN(g_spriteRenderer->create(pd3dDevice));
+	V_RETURN(g_Sprites->create(pd3dDevice, g_Effect2D.g_pSpritePass, g_configParser));
 
 	return S_OK;
 }
@@ -419,6 +418,7 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	Mesh::destroyInputLayout();
 	Shield::destroyInputLayout();
 	Shield::destroyDepthBuffer();
+	Sprites::destroyInputLayout();
 
 	// Destroy the terrain
 	g_terrain.destroy();
@@ -435,7 +435,7 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	g_EnemyShield->destroy();
 
 	// Destroy sprite renderer
-	g_spriteRenderer->destroy();
+	g_Sprites->destroy();
 
 	SAFE_DELETE(g_txtHelper);
 	ReleaseShader();
@@ -499,11 +499,10 @@ HRESULT ReloadShader(ID3D11Device* pd3dDevice)
 
 	HRESULT hr;
 
+	// Release then create CPU side of rendering effects
 	ReleaseShader();
-	V_RETURN(g_3DRenderEffect.create(pd3dDevice, g_configParser));
-
-	// Reload sprite renderer
-	V_RETURN(g_spriteRenderer->reloadShader(pd3dDevice));
+	V_RETURN(g_Effect3D.create(pd3dDevice, g_configParser));
+	V_RETURN(g_Effect2D.create(pd3dDevice, g_configParser));
 
 	return S_OK;
 }
@@ -513,10 +512,9 @@ HRESULT ReloadShader(ID3D11Device* pd3dDevice)
 //--------------------------------------------------------------------------------------
 void ReleaseShader()
 {
-	// Release game effect stuff
-	g_3DRenderEffect.destroy();
-	// Release sprite renderer
-	g_spriteRenderer->releaseShader();
+	// Release CPU side of rendering effects	
+	g_Effect3D.destroy();
+	g_Effect2D.destroy();
 }
 
 //--------------------------------------------------------------------------------------
@@ -621,9 +619,6 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 	UNREFERENCED_PARAMETER(pUserContext);
 	// Update the camera's position based on user input 
 	g_camera.FrameMove(fElapsedTime);
-
-	// Initialize the terrain world matrix
-	// http://msdn.microsoft.com/en-us/library/windows/desktop/bb206365%28v=vs.85%29.aspx
 
 	// Start with identity matrix
 	g_terrainWorld = XMMatrixIdentity();
@@ -764,7 +759,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 			l_NewProj.LifeTime = PROJECTILELIFETIME;
 			l_NewProj.Damage = it->Type.Damage;
 			// Set particle information
-			l_NewSprite.TextureIndex = g_spriteRenderer->getSpriteID(it->Type.SpriteName);
+			l_NewSprite.TextureIndex = g_Sprites->getSpriteID(it->Type.SpriteName);
 			XMStoreFloat3(&l_NewSprite.Position, l_vPos);
 			l_NewSprite.Radius = it->Type.SpriteRadius;
 			l_NewSprite.Progress = 0.0f;
@@ -855,7 +850,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 					ConfigParser::Animation destroyAnim = g_configParser.GetAnimations()[enemy->DestroyAnim];
 					ConfigParser::Animation destroyPart = g_configParser.GetAnimations()[enemy->DestroyPart];
 					// Save in struct
-					l_ExplSprite.TextureIndex = g_spriteRenderer->getSpriteID(destroyAnim.SpriteName);
+					l_ExplSprite.TextureIndex = g_Sprites->getSpriteID(destroyAnim.SpriteName);
 					l_ExplSprite.Position = enemy->Position;
 					l_ExplSprite.Radius = destroyAnim.SpriteRadius;
 					l_ExplSprite.Progress = 0.0f;
@@ -878,7 +873,7 @@ void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 						SpriteInstance l_NewPart;
 						SpriteVertex l_PartSprite;
 						// Save in struct
-						l_PartSprite.TextureIndex = g_spriteRenderer->getSpriteID(destroyPart.SpriteName);
+						l_PartSprite.TextureIndex = g_Sprites->getSpriteID(destroyPart.SpriteName);
 						l_PartSprite.Position = enemy->Position;
 						l_PartSprite.Radius = destroyPart.SpriteRadius;
 						l_PartSprite.Progress = 0.0f;
@@ -933,13 +928,8 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		return;
 	}
 
-	// Get RTV and clear with backcolor
-	ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
-	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	pd3dImmediateContext->ClearRenderTargetView(pRTV, clearColor);
-
 	// Error handling
-	if (g_3DRenderEffect.g_pEffect == NULL) {
+	if (g_Effect3D.g_pEffect == NULL) {
 		g_txtHelper->Begin();
 		g_txtHelper->SetInsertionPos(5, 5);
 		g_txtHelper->SetForegroundColor(XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
@@ -948,13 +938,13 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		return;
 	}
 
-	// Depth buffer rendering first
-	pd3dImmediateContext->OMSetRenderTargets(0, NULL, Shield::g_pDepthStencilView);
-	pd3dImmediateContext->ClearDepthStencilView(Shield::g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
 	//--------------------------------------------------------------------------------------
 	// Terrain
 	//--------------------------------------------------------------------------------------
+
+	// Depth buffer rendering first
+	pd3dImmediateContext->OMSetRenderTargets(0, NULL, Shield::g_pDepthStencilView);
+	pd3dImmediateContext->ClearDepthStencilView(Shield::g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	// Update variables that change once per frame
 	XMMATRIX worldViewProj = g_terrainWorld * g_camera.GetViewMatrix() * g_camera.GetProjMatrix();
@@ -962,25 +952,29 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	XMMATRIX worldNormal = XMMatrixTranspose(XMMatrixInverse(nullptr, g_terrainWorld));
 
 	// Save in shader
-	V(g_3DRenderEffect.g_pWorldMatrix->SetMatrix((float*)&g_terrainWorld));
-	V(g_3DRenderEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&worldViewProj));
-	V(g_3DRenderEffect.g_pWorldNormalMatrix->SetMatrix((float*)&worldNormal));
-	V(g_3DRenderEffect.g_pLightDirVector->SetFloatVector((float*)&g_lightDir));
-	V(g_3DRenderEffect.g_pFarPlaneDist->SetFloat(g_camera.GetFarClip()));
+	V(g_Effect3D.g_pWorldMatrix->SetMatrix((float*)&g_terrainWorld));
+	V(g_Effect3D.g_pWorldViewProjMatrix->SetMatrix((float*)&worldViewProj));
+	V(g_Effect3D.g_pWorldNormalMatrix->SetMatrix((float*)&worldNormal));
+	V(g_Effect3D.g_pLightDirVector->SetFloatVector((float*)&g_lightDir));
+	V(g_Effect3D.g_pFarPlaneDist->SetFloat(g_camera.GetFarClip()));
 
-	// Perform rendering
-	g_terrain.render(pd3dImmediateContext, g_3DRenderEffect.g_pTerrainPass0);
+	// Perform depth rendering
+	g_terrain.render(pd3dImmediateContext, g_Effect3D.g_pTerrainDepth);
 
+	// Get RTV and clear with backcolor
+	ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
+	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	pd3dImmediateContext->ClearRenderTargetView(pRTV, clearColor);
 	// Clear the depth stencil and set the normal view
 	ID3D11DepthStencilView* pDSV = DXUTGetD3D11DepthStencilView();
 	pd3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDSV);
-	pd3dImmediateContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0, 0);
+	pd3dImmediateContext->ClearDepthStencilView(pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	// Set the depth texture
-	V(g_3DRenderEffect.g_pDepthBuffer2D->SetResource(Shield::g_pDepthSRV));
+	V(g_Effect3D.g_pDepthBuffer2D->SetResource(Shield::g_pDepthSRV));
 
-	// Perform rendering again
-	g_terrain.render(pd3dImmediateContext, g_3DRenderEffect.g_pTerrainPass0);
+	// Perform normal rendering
+	g_terrain.render(pd3dImmediateContext, g_Effect3D.g_pTerrainPass);
 
 	//--------------------------------------------------------------------------------------
 	// Cockpit and ground objects (opaque)
@@ -1008,21 +1002,21 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
 
 		// Save in shader
-		V(g_3DRenderEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_3DRenderEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
-		V(g_3DRenderEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_3DRenderEffect.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
+		V(g_Effect3D.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_Effect3D.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_Effect3D.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_Effect3D.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
 
 		// If the mesh is not a transparent one
 		if (g_Meshes.find(it->Identifier) != g_Meshes.end()) {
 			// Render the mesh accordingly
 			g_Meshes[it->Identifier]->render(	pd3dImmediateContext,
-												g_3DRenderEffect.g_pMeshPass1,
-												g_3DRenderEffect.g_pDiffuseTexture2D,
-												g_3DRenderEffect.g_pSpecularTexture2D,
-												g_3DRenderEffect.g_pGlowTexture2D,
-												g_3DRenderEffect.g_pNormalTexture2D,
-												g_3DRenderEffect.g_pTransparencyTexture2D);
+												g_Effect3D.g_pMeshPass,
+												g_Effect3D.g_pDiffuseTexture2D,
+												g_Effect3D.g_pSpecularTexture2D,
+												g_Effect3D.g_pGlowTexture2D,
+												g_Effect3D.g_pNormalTexture2D,
+												g_Effect3D.g_pTransparencyTexture2D);
 		}
 	}
 
@@ -1056,19 +1050,19 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMVECTOR mCameraPosWorld = g_camera.GetEyePt();
 
 		// Save in shader
-		V(g_3DRenderEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_3DRenderEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
-		V(g_3DRenderEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_3DRenderEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraPosWorld));
+		V(g_Effect3D.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_Effect3D.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_Effect3D.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_Effect3D.g_pCameraPosWorld->SetFloatVector((float*)&mCameraPosWorld));
 
 		// Render the enemy accordingly		
 		g_Meshes[enemyType.Mesh]->render(	pd3dImmediateContext,
-											g_3DRenderEffect.g_pMeshPass1,
-											g_3DRenderEffect.g_pDiffuseTexture2D,
-											g_3DRenderEffect.g_pSpecularTexture2D,
-											g_3DRenderEffect.g_pGlowTexture2D,
-											g_3DRenderEffect.g_pNormalTexture2D,
-											g_3DRenderEffect.g_pTransparencyTexture2D);
+											g_Effect3D.g_pMeshPass,
+											g_Effect3D.g_pDiffuseTexture2D,
+											g_Effect3D.g_pSpecularTexture2D,
+											g_Effect3D.g_pGlowTexture2D,
+											g_Effect3D.g_pNormalTexture2D,
+											g_Effect3D.g_pTransparencyTexture2D);
 
 		// Update matrices to have scaling * animation as world transformation matrix
 		mWorld = XMMatrixScaling(enemyType.Size, enemyType.Size, enemyType.Size) * mRotAnim * mTransAnim;
@@ -1077,21 +1071,21 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMVECTOR mCameraLookDir = g_camera.GetLookAtPt();
 
 		// Save in shader
-		V(g_3DRenderEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_3DRenderEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
-		V(g_3DRenderEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals));
-		V(g_3DRenderEffect.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir))
-		V(g_3DRenderEffect.g_pHitArray->SetFloatVectorArray((float*)&it->Hits, 0, 10));
+		V(g_Effect3D.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_Effect3D.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_Effect3D.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals));
+		V(g_Effect3D.g_pCameraPosWorld->SetFloatVector((float*)&mCameraLookDir))
+		V(g_Effect3D.g_pHitArray->SetFloatVectorArray((float*)&it->Hits, 0, 10));
 		
 		// Render the shield around the enemy (transparent after opaque)
 		g_EnemyShield->render(	pd3dImmediateContext,
-								g_3DRenderEffect.g_pShieldPass2,
-								g_3DRenderEffect.g_pDiffuseTexture2D);
+								g_Effect3D.g_pShieldPass,
+								g_Effect3D.g_pDiffuseTexture2D);
 	}
 
-	// Unbind the srv to prevent it from being both read/written to
-	V(g_3DRenderEffect.g_pDepthBuffer2D->SetResource(NULL));
-	g_3DRenderEffect.g_pShieldPass2->Apply(0, pd3dImmediateContext);
+	// Unbind the SRV to prevent it from being both read/written to in the next frame
+	V(g_Effect3D.g_pDepthBuffer2D->SetResource(NULL));
+	g_Effect3D.g_pShieldPass->Apply(0, pd3dImmediateContext);
 
 	//--------------------------------------------------------------------------------------
 	// Render sprites (transparent after opaque)
@@ -1115,8 +1109,8 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 				XMVector3Dot(g_camera.GetWorldAhead(), XMLoadFloat3(&j.Position)));
 		});
 
-		// Render them
-		g_spriteRenderer->renderSprites(pd3dImmediateContext, l_CurrSprites, g_camera);
+		// Render the sprites
+		g_Sprites->renderSprites(pd3dImmediateContext, g_Effect2D.g_pSpritePass, l_CurrSprites, g_camera);
 	}
 
 	//--------------------------------------------------------------------------------------
@@ -1142,21 +1136,21 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 		XMVECTOR mcameraPosWorld = g_camera.GetEyePt();
 
 		// Save in shader
-		V(g_3DRenderEffect.g_pWorldMatrix->SetMatrix((float*)&mWorld));
-		V(g_3DRenderEffect.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
-		V(g_3DRenderEffect.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
-		V(g_3DRenderEffect.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
+		V(g_Effect3D.g_pWorldMatrix->SetMatrix((float*)&mWorld));
+		V(g_Effect3D.g_pWorldViewProjMatrix->SetMatrix((float*)&mWorldViewProj));
+		V(g_Effect3D.g_pWorldNormalMatrix->SetMatrix((float*)&mWorldNormals))
+		V(g_Effect3D.g_pCameraPosWorld->SetFloatVector((float*)&mcameraPosWorld));
 
 		// If the mesh is not a transparent one
 		if (g_Transparent.find(it->Identifier) != g_Transparent.end()) {
 			// Render the mesh accordingly
 			g_Transparent[it->Identifier]->render(	pd3dImmediateContext,
-													g_3DRenderEffect.g_pMeshPass1,
-													g_3DRenderEffect.g_pDiffuseTexture2D,
-													g_3DRenderEffect.g_pSpecularTexture2D,
-													g_3DRenderEffect.g_pGlowTexture2D,
-													g_3DRenderEffect.g_pNormalTexture2D,
-													g_3DRenderEffect.g_pTransparencyTexture2D);
+													g_Effect3D.g_pMeshPass,
+													g_Effect3D.g_pDiffuseTexture2D,
+													g_Effect3D.g_pSpecularTexture2D,
+													g_Effect3D.g_pGlowTexture2D,
+													g_Effect3D.g_pNormalTexture2D,
+													g_Effect3D.g_pTransparencyTexture2D);
 		}
 	}
 

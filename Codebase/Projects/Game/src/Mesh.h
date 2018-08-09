@@ -1,7 +1,10 @@
 #pragma once
 
+#include "T3d.h"
+
 #include <DXUT.h>
 #include <d3dx11effect.h>
+#include <DDSTextureLoader.h>
 
 #include <vector>
 #include <cstdint>
@@ -11,19 +14,19 @@ class Mesh
 {
 public:
 	//Create mesh object and set filenames
-	Mesh(	const std::string& filename_t3d,				// Filename of mesh geometry
-			const std::string& filename_dds_diffuse,		// Filename of diffuse texture
-			const std::string& filename_dds_specular,		// Filename of specular texture
-			const std::string& filename_dds_glow,			// Filename of glow texture
-			const std::string& filename_dds_normal,			// Filename of normal texture
-			const std::string& filename_dds_transparency);	// Filename of transparency texture
+	Mesh(	const std::string& filenameT3D,					// Filename of mesh geometry
+			const std::string& filenameDDSDiffuse,			// Filename of diffuse texture
+			const std::string& filenameDDSSpecular,			// Filename of specular texture
+			const std::string& filenameDDSGlow,				// Filename of glow texture
+			const std::string& filenameDDSNormal,			// Filename of normal texture
+			const std::string& filenameDDSTransparency);	// Filename of transparency texture
 		 
-	Mesh(	const std::wstring& filename_t3d,				// Filename of mesh geometry
-			const std::wstring& filename_dds_diffuse,		// Filename of diffuse texture
-			const std::wstring& filename_dds_specular,		// Filename of specular texture
-			const std::wstring& filename_dds_glow,			// Filename of glow texture
-			const std::wstring& filename_dds_normal,			// Filename of normal texture
-			const std::wstring& filename_dds_transparency);	// Filename of transparency texture
+	Mesh(	const std::wstring& filenameT3D,				// Filename of mesh geometry
+			const std::wstring& filenameDDSDiffuse,			// Filename of diffuse texture
+			const std::wstring& filenameDDSSpecular,		// Filename of specular texture
+			const std::wstring& filenameDDSGlow,			// Filename of glow texture
+			const std::wstring& filenameDDSNormal,			// Filename of normal texture
+			const std::wstring& filenameDDSTransparency);	// Filename of transparency texture
 
 	//Currently does nothing
 	~Mesh(void);
@@ -42,11 +45,11 @@ public:
 
 	// Render the mesh
 	HRESULT render(	ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
-					ID3DX11EffectShaderResourceVariable* diffuseEffectVariable,
-					ID3DX11EffectShaderResourceVariable* specularEffectVariable,
-					ID3DX11EffectShaderResourceVariable* glowEffectVariable,
-					ID3DX11EffectShaderResourceVariable* normalEffectVariable,
-					ID3DX11EffectShaderResourceVariable* transparencyEffectVariable);
+					ID3DX11EffectShaderResourceVariable* diffuseEV,
+					ID3DX11EffectShaderResourceVariable* specularEV,
+					ID3DX11EffectShaderResourceVariable* glowEV,
+					ID3DX11EffectShaderResourceVariable* normalEV,
+					ID3DX11EffectShaderResourceVariable* transparencyEV);
 
 private:
 	// Reads the complete file given by "path" byte-wise into "data".
@@ -58,17 +61,17 @@ private:
 	
 private:
 	// Filenames
-	std::wstring				m_sFilenameT3d;
-	std::wstring				m_sFilenameDDSDiffuse;
-	std::wstring				m_sFilenameDDSSpecular;
-	std::wstring				m_sFilenameDDSGlow;
-	std::wstring				m_sFilenameDDSNormal;
-	std::wstring				m_sFilenameDDSTransparency;
+	std::wstring		m_sFilenameT3d;
+	std::wstring		m_sFilenameDDSDiffuse;
+	std::wstring		m_sFilenameDDSSpecular;
+	std::wstring		m_sFilenameDDSGlow;
+	std::wstring		m_sFilenameDDSNormal;
+	std::wstring		m_sFilenameDDSTransparency;
 
 	// Mesh geometry information
-	ID3D11Buffer*               m_pVertexBuffer;
-	ID3D11Buffer*               m_pIndexBuffer;
-	int                         m_iIndexCount;
+	ID3D11Buffer*       m_pVertexBuffer;
+	ID3D11Buffer*		m_pIndexBuffer;
+	int					m_iIndexCount;
 
 	// Mesh textures and corresponding shader resource views
 	ID3D11Texture2D*            m_pDiffuseTex;

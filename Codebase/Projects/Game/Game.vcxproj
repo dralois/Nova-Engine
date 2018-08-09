@@ -260,12 +260,13 @@ exit 1</Command>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Effect2D.h" />
     <ClInclude Include="src\ConfigParser.h" />
-    <ClInclude Include="src\3DRenderer.h" />
+    <ClInclude Include="src\Effect3D.h" />
     <ClInclude Include="src\Debug.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Shield.h" />
-    <ClInclude Include="src\SpriteRenderer.h" />
+    <ClInclude Include="src\Sprites.h" />
     <ClInclude Include="src\T3d.h" />
     <ClInclude Include="src\Terrain.h" />
   </ItemGroup>
@@ -274,13 +275,13 @@ exit 1</Command>
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Shield.cpp" />
-    <ClCompile Include="src\SpriteRenderer.cpp" />
+    <ClCompile Include="src\Sprites.cpp" />
     <ClCompile Include="src\T3d.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
-    <ClCompile Include="src\Util.cpp" />
+    <ClCompile Include="src\Util.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader\3DRenderer.fx">
+    <FxCompile Include="shader\3DShaders.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Effect</ShaderType>
@@ -294,7 +295,7 @@ exit 1</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="shader\2DSpriteRenderer.fx">
+    <FxCompile Include="shader\2DShaders.fx">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

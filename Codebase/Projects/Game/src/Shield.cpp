@@ -1,6 +1,7 @@
 #include "Shield.h"
 
 #define PI 3.141592654F
+#define SHIELDTEX L"resources\\shield01.DDS"
 
 using namespace std;
 using namespace DirectX;
@@ -85,7 +86,7 @@ HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
 	m_iVertexCount = l_arrSphere.size();
 
 	// Create texture
-	V(DirectX::CreateDDSTextureFromFile(pDevice, L"resources\\shield01.DDS", (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
+	V(DirectX::CreateDDSTextureFromFile(pDevice, SHIELDTEX, (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
 
 	return S_OK;
 }
@@ -178,13 +179,18 @@ HRESULT Shield::createInputLayout(ID3D11Device * device, ID3DX11EffectPass * pas
 
 void Shield::destroyInputLayout()
 {
-	SAFE_RELEASE(m_pInputLayout)
+	SAFE_RELEASE(m_pInputLayout);
 }
 
-HRESULT Shield::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
-	ID3DX11EffectShaderResourceVariable* diffuseTex)
+HRESULT Shield::render(	ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
+						ID3DX11EffectShaderResourceVariable* diffuseEV)
 {
 	HRESULT hr;
+
+	if ((diffuseEV == nullptr) || !diffuseEV->IsValid())
+	{
+		throw std::exception("Transparency EV is null or invalid");
+	}
 
 	// Bind the terrain vertex buffer to the input assembler stage 
 	ID3D11Buffer* vbs[] = { m_pVertexBuffer, };
@@ -196,7 +202,7 @@ HRESULT Shield::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
 	context->IASetInputLayout(m_pInputLayout);
 
 	// Set texture
-	V(diffuseTex->SetResource(m_pShieldTexSRV));
+	V(diffuseEV->SetResource(m_pShieldTexSRV));
 
 	// Apply the pass
 	V(pass->Apply(0, context));
@@ -211,7 +217,7 @@ HRESULT Shield::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
 
 #pragma region Constructors & Destructors
 
-Shield::Shield() :
+Shield::Shield():
 	m_pVertexBuffer(NULL),
 	m_pShieldTex2D(NULL),
 	m_pShieldTexSRV(NULL),

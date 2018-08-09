@@ -24,16 +24,19 @@
     <ClInclude Include="src\T3d.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\SpriteRenderer.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="src\Shield.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\3DRenderer.h">
+    <ClInclude Include="src\Debug.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\Debug.h">
+    <ClInclude Include="src\Effect3D.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Effect2D.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sprites.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
@@ -53,21 +56,21 @@
     <ClCompile Include="src\T3d.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="src\SpriteRenderer.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Util.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="src\Shield.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sprites.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util.h">
+      <Filter>Headerdateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader\3DRenderer.fx">
+    <FxCompile Include="shader\2DShaders.fx">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="shader\2DSpriteRenderer.fx">
+    <FxCompile Include="shader\3DShaders.fx">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

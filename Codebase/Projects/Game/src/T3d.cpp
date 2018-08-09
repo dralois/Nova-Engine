@@ -6,14 +6,15 @@
 using namespace std;
 
 struct T3dHeader {
-	int16_t magicNumber; // Must be 0x003D 
-	int16_t version;     // Must be 1 
-	int32_t verticesSize;  // vertex buffer data size 
-	int32_t indicesSize;   // index buffer data size 
+	int16_t magicNumber;	// Must be 0x003D 
+	int16_t version;		// Must be 1 
+	int32_t verticesSize;	// vertex buffer data size 
+	int32_t indicesSize;	// index buffer data size 
 };
 
-HRESULT T3d::readFromFile(const std::string& filename, std::vector<T3dVertex>& vertexBufferData, 
-                                        std::vector<uint32_t>& indexBufferData)
+HRESULT T3d::readFromFile(	const std::string& filename, 
+							std::vector<T3dVertex>& vertexBufferData, 
+							std::vector<uint32_t>& indexBufferData)
 {
     // Open the file
     FILE* file;
@@ -62,9 +63,9 @@ HRESULT T3d::readFromFile(const std::string& filename, std::vector<T3dVertex>& v
 	return S_OK;
 }
 
-
-HRESULT T3d::readFromFile(const std::wstring& filename, std::vector<T3dVertex>& vertexBufferData, 
-                                        std::vector<uint32_t>& indexBufferData)
+HRESULT T3d::readFromFile(	const std::wstring& filename, 
+							std::vector<T3dVertex>& vertexBufferData, 
+                            std::vector<uint32_t>& indexBufferData)
 {
     // Open the file
     FILE* file;
@@ -113,14 +114,14 @@ HRESULT T3d::readFromFile(const std::wstring& filename, std::vector<T3dVertex>& 
 	return S_OK;
 }
 
-
-HRESULT T3d::createT3dInputLayout(ID3D11Device* pd3dDevice, 
-	ID3DX11EffectPass* pass, ID3D11InputLayout** t3dInputLayout)
+HRESULT T3d::createT3dInputLayout(	ID3D11Device* pd3dDevice, 
+									ID3DX11EffectPass* pass, 
+									ID3D11InputLayout** t3dInputLayout)
 {
 	HRESULT hr;
 
 	// Define the input layout
-	const D3D11_INPUT_ELEMENT_DESC layout[] = // http://msdn.microsoft.com/en-us/library/bb205117%28v=vs.85%29.aspx
+	const D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },

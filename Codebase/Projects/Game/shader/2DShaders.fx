@@ -122,7 +122,8 @@ void SpriteGS(point SpriteVertex input[1], inout TriangleStream<PSVertex> stream
 // Samples from texture
 float4 SpritePS(PSVertex input) : SV_Target0
 {
-    float4 dims, col;
+    float4 dims = (float4) 0;
+    float4 col = (float4) 0;
     // Switch over texture arrays (select texture based in index and progress)
     switch (input.TextureIndex)
     {
@@ -158,11 +159,21 @@ float4 SpritePS(PSVertex input) : SV_Target0
 //--------------------------------------------------------------------------------------
 technique11 Render
 {
-    pass P0
+    pass P0_Sprite
     {
         SetVertexShader(CompileShader(vs_4_0, SpriteVS()));
         SetGeometryShader(CompileShader(gs_4_0, SpriteGS()));
         SetPixelShader(CompileShader(ps_4_0, SpritePS()));
+        
+        SetRasterizerState(rsCullNone);
+        SetDepthStencilState(EnableDepth, 0);
+        SetBlendState(BSBlendOver, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
+    }
+    pass P1_Skybox
+    {
+        SetVertexShader(NULL);
+        SetGeometryShader(NULL);
+        SetPixelShader(NULL);
         
         SetRasterizerState(rsCullNone);
         SetDepthStencilState(EnableDepth, 0);

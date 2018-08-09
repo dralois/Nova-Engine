@@ -182,9 +182,9 @@ float4 TerrainPS(TerrainVertexPSIn Input) : SV_Target0
     n = normalize(mul(float4(n, 0), g_WorldNormals).xyz);
     // Sample texture at pos
     float3 matDiffuse = g_Diffuse.Sample(samLinearClamp, Input.Tex).xyz;
-    // Calculate intensity (in range [0-1])
+    // Simple N*L lighting
     float i = saturate(dot(n, g_LightDir.xyz));
-    // Apply intensity to the color and return color
+    // Return color based on calculated lighting
     return float4(matDiffuse * i, 1.0f);
 }
 
@@ -216,8 +216,7 @@ float4 MeshPS(T3dVertexPSIn Input) : SV_Target0
     float4 matDiffuse = g_Diffuse.Sample(samAnisotropic, Input.Tex);
     float4 matSpecular = g_Specular.Sample(samAnisotropic, Input.Tex);
     float4 matGlow = g_Glow.Sample(samAnisotropic, Input.Tex);
-    float transparency = g_Transparency.Sample(samAnisotropic, Input.Tex);
-    transparency = transparency > 0 ? transparency : 1;
+    float matTrans = 1 - g_Transparency.Sample(samAnisotropic, Input.Tex);
     // Light and ambient color are white and not dynamic
     float4 colLight = float4(1.0f, 1.0f, 1.0f, 1.0f);
     float4 colLightAmbient = float4(1.0f, 1.0f, 1.0f, 1.0f);  
@@ -247,7 +246,7 @@ float4 MeshPS(T3dVertexPSIn Input) : SV_Target0
     return float4((cd * matDiffuse * saturate(dot(normal, g_LightDir.xyz)) * colLight +
                     cs * matSpecular * pow(saturate(dot(reflectDir, viewDir)), 5) * colLight +
                     ca * matDiffuse * colLightAmbient +
-                    cg * matGlow).rgb, transparency);
+                    cg * matGlow).rgb, matTrans);
 }
 
 // Shield vertex shader
@@ -319,6 +318,17 @@ technique11 Render
         SetVertexShader(CompileShader(vs_4_0, TerrainVS()));
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0, TerrainPS()));
+        
+        SetRasterizerState(rsCullNone);
+        SetDepthStencilState(EnableDepth, 0);
+        SetBlendState(NoBlending, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xFFFFFFFF);
+    }
+    // Depth generation only
+    pass P0_Depth
+    {
+        SetVertexShader(CompileShader(vs_4_0, TerrainVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(NULL);
         
         SetRasterizerState(rsCullNone);
         SetDepthStencilState(EnableDepth, 0);

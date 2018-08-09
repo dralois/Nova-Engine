@@ -9,7 +9,7 @@ using namespace DirectX;
 
 float Terrain::GetHeightAtXY(float pi_dX, float pi_dY)
 {
-	return dHeightfield[IDX((int)roundf((iResolution - 1) * pi_dX), (int)roundf((iResolution - 1) * pi_dY), iResolution)];
+	return m_arrHeightfield[IDX((int)roundf((m_iResolution - 1) * pi_dX), (int)roundf((m_iResolution - 1) * pi_dY), m_iResolution)];
 }
 
 #pragma endregion
@@ -24,29 +24,29 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	GEDUtils::SimpleImage heightfield((parser.GetResourceFolder() + parser.GetTerrainInfo().HeightMap).c_str());
 
 	// Easy access
-	iResolution = heightfield.getWidth();
-	dHeightfield = vector<float> (iResolution * iResolution);
+	m_iResolution = heightfield.getWidth();
+	m_arrHeightfield = vector<float> (m_iResolution * m_iResolution);
 	
 	// Fill heightfield
-	for (int x = 0; x < iResolution; x++) {
-		for (int y = 0; y < iResolution; y++) {
-			dHeightfield[IDX(x, y, iResolution)] = heightfield.getPixel(x, y);
+	for (int x = 0; x < m_iResolution; x++) {
+		for (int y = 0; y < m_iResolution; y++) {
+			m_arrHeightfield[IDX(x, y, m_iResolution)] = heightfield.getPixel(x, y);
 		}
 	}
 
 	// Create index buffer
 	vector<int> indices;
 	// Loop through quads and fill with appropriate indeces
-	for (int x = 0; x < iResolution - 1; x++) {
-		for (int y = 0; y < iResolution - 1; y++) {
+	for (int x = 0; x < m_iResolution - 1; x++) {
+		for (int y = 0; y < m_iResolution - 1; y++) {
 			// First triangle
-			indices.push_back((iResolution * y) + x);
-			indices.push_back((iResolution * y) + x + 1);
-			indices.push_back((iResolution * (y + 1)) + x);
+			indices.push_back((m_iResolution * y) + x);
+			indices.push_back((m_iResolution * y) + x + 1);
+			indices.push_back((m_iResolution * (y + 1)) + x);
 			// Second triangle
-			indices.push_back((iResolution * (y + 1)) + x);
-			indices.push_back((iResolution * y) + x + 1);
-			indices.push_back((iResolution * (y + 1)) + x + 1);
+			indices.push_back((m_iResolution * (y + 1)) + x);
+			indices.push_back((m_iResolution * y) + x + 1);
+			indices.push_back((m_iResolution * (y + 1)) + x + 1);
 		}
 	}
 
@@ -63,7 +63,7 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	bd.ByteWidth = sizeof(unsigned int) * indices.size();
 
 	// Create index buffer
-	V(device->CreateBuffer(&bd, &id, &indexBuffer));
+	V(device->CreateBuffer(&bd, &id, &m_pIndexBuffer));
 
 	// Clear buffer desc and adjust
 	ZeroMemory(&bd, sizeof(bd));
@@ -71,38 +71,38 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	bd.CPUAccessFlags = 0;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	bd.ByteWidth = sizeof(float) * dHeightfield.size();
+	bd.ByteWidth = sizeof(float) * m_arrHeightfield.size();
 
 	// Clear data information and adjust
 	ZeroMemory(&id, sizeof(id));
-	id.pSysMem = &dHeightfield[0];
+	id.pSysMem = &m_arrHeightfield[0];
 	id.SysMemPitch = sizeof(float);
 	id.SysMemSlicePitch = 0;
 
 	// Create heightmap buffer
-	V(device->CreateBuffer(&bd, &id, &heightBuffer));
+	V(device->CreateBuffer(&bd, &id, &m_pHeightBuffer));
 
 	// Create description
 	D3D11_BUFFER_SRV buffer;
 	buffer.FirstElement = 0;
-	buffer.NumElements = iResolution * iResolution;
+	buffer.NumElements = m_iResolution * m_iResolution;
 	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
 	desc.Format = DXGI_FORMAT_R32_FLOAT;
 	desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 	desc.Buffer = buffer;
 
 	// Create SRV for the heightmap buffer
-	device->CreateShaderResourceView(heightBuffer, &desc, &heightBufferSRV);
+	device->CreateShaderResourceView(m_pHeightBuffer, &desc, &m_pHeightBufferSRV);
 
 	// Convert strings	
 	wchar_t * color =  Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().ColorMap).c_str());
 	wchar_t * normal = Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().NormalMap).c_str());
 
 	// Load color texture (color for terrain)
-	V(DirectX::CreateDDSTextureFromFile(device, color, nullptr, &diffuseTextureSRV));
+	V(DirectX::CreateDDSTextureFromFile(device, color, nullptr, &m_pDiffuseTextureSRV));
 	
 	// Load normal texture (normals for terrain)
-	V(DirectX::CreateDDSTextureFromFile(device, normal, nullptr, &normalTextureSRV));
+	V(DirectX::CreateDDSTextureFromFile(device, normal, nullptr, &m_pNormalTextureSRV));
 
 	// Cleanup
 	delete[] color;
@@ -119,13 +119,13 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 
 void Terrain::destroy()
 {
-	SAFE_RELEASE(indexBuffer);
-	SAFE_RELEASE(diffuseTexture);
-	SAFE_RELEASE(diffuseTextureSRV);
-	SAFE_RELEASE(normalTexture);
-	SAFE_RELEASE(normalTextureSRV);
-	SAFE_RELEASE(heightBuffer);
-	SAFE_RELEASE(heightBufferSRV);
+	SAFE_RELEASE(m_pIndexBuffer);
+	SAFE_RELEASE(m_pDiffuseTexture);
+	SAFE_RELEASE(m_pDiffuseTextureSRV);
+	SAFE_RELEASE(m_pNormalTexture);
+	SAFE_RELEASE(m_pNormalTextureSRV);
+	SAFE_RELEASE(m_pHeightBuffer);
+	SAFE_RELEASE(m_pHeightBufferSRV);
 }
 
 void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
@@ -138,24 +138,24 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
     context->IASetVertexBuffers(0, 1, vbs, strides, offsets);
 
 	// Bind the index buffer to the input assembler stage
-	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
     // Tell the input assembler stage which primitive topology to use
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);    
 
 	// Bind the various textures
-	V(g_3DRenderEffect.g_pDiffuseTexture2D->SetResource(diffuseTextureSRV));
-	V(g_3DRenderEffect.g_pNormalTexture2D->SetResource(normalTextureSRV));
-	V(g_3DRenderEffect.g_pTerrainHeightTexture2D->SetResource(heightBufferSRV));
+	V(g_Effect3D.g_pDiffuseTexture2D->SetResource(m_pDiffuseTextureSRV));
+	V(g_Effect3D.g_pNormalTexture2D->SetResource(m_pNormalTextureSRV));
+	V(g_Effect3D.g_pTerrainHeightTexture2D->SetResource(m_pHeightBufferSRV));
 
 	// Set the resolution
-	V(g_3DRenderEffect.g_pTerrainResolution->SetInt(iResolution));
+	V(g_Effect3D.g_pTerrainResolution->SetInt(m_iResolution));
 
     // Apply the rendering pass in order to submit the necessary render state changes to the device
     V(pass->Apply(0, context));
 
 	// Fetch index buffer desc
 	D3D11_BUFFER_DESC bd;
-	indexBuffer->GetDesc(&bd);
+	m_pIndexBuffer->GetDesc(&bd);
 	
     // Draw (no. of indices must be known..)
     context->DrawIndexed(bd.ByteWidth / sizeof(unsigned int), 0, 0);	
@@ -166,13 +166,13 @@ void Terrain::render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass)
 #pragma region Contructor & Destructor
 
 Terrain::Terrain(void) :
-	indexBuffer(nullptr),
-	diffuseTexture(nullptr),
-	diffuseTextureSRV(nullptr),
-	normalTexture(nullptr),
-	normalTextureSRV(nullptr),
-	heightBuffer(nullptr),
-	heightBufferSRV(nullptr)
+	m_pIndexBuffer(NULL),
+	m_pDiffuseTexture(NULL),
+	m_pDiffuseTextureSRV(NULL),
+	m_pNormalTexture(NULL),
+	m_pNormalTextureSRV(NULL),
+	m_pHeightBuffer(NULL),
+	m_pHeightBufferSRV(NULL)
 {
 }
 

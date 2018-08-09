@@ -28,7 +28,7 @@ private:
 	
 	std::normal_distribution<float> m_Randomizer;
 	std::default_random_engine m_Generator;
-	const unsigned int m_iSeed = 12696;
+	const unsigned int m_iSeed = 1247016462;
 	float m_dRoughness = 0.9F;
 	float m_dSigma = 1.0F;
 	float *m_dHeightField;

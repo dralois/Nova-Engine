@@ -1,8 +1,5 @@
 #include "Mesh.h"
 
-#include "T3d.h"
-#include <DDSTextureLoader.h>
-
 ID3D11InputLayout*	Mesh::m_pInputLayout;
 
 #pragma region Procedures
@@ -92,42 +89,42 @@ void Mesh::destroyInputLayout()
 }
 
 HRESULT Mesh::render(	ID3D11DeviceContext* context, ID3DX11EffectPass* pass, 
-						ID3DX11EffectShaderResourceVariable* diffuseEffectVariable,
-						ID3DX11EffectShaderResourceVariable* specularEffectVariable,
-						ID3DX11EffectShaderResourceVariable* glowEffectVariable,
-						ID3DX11EffectShaderResourceVariable* normalEffectVariable,
-						ID3DX11EffectShaderResourceVariable* transparencyEffectVariable)
+						ID3DX11EffectShaderResourceVariable* diffuseEV,
+						ID3DX11EffectShaderResourceVariable* specularEV,
+						ID3DX11EffectShaderResourceVariable* glowEV,
+						ID3DX11EffectShaderResourceVariable* normalEV,
+						ID3DX11EffectShaderResourceVariable* transparencyEV)
 {
 	HRESULT hr;
 
 	// Check if textures exist
-    if ((diffuseEffectVariable == nullptr) || !diffuseEffectVariable->IsValid())
+    if ((diffuseEV == nullptr) || !diffuseEV->IsValid())
     {
         throw std::exception("Diffuse EV is null or invalid");
     }
-    if ((specularEffectVariable == nullptr) || !specularEffectVariable->IsValid())
+    if ((specularEV == nullptr) || !specularEV->IsValid())
     {
         throw std::exception("Specular EV is null or invalid");
     }
-    if ((glowEffectVariable == nullptr) || !glowEffectVariable->IsValid())
+    if ((glowEV == nullptr) || !glowEV->IsValid())
     {
         throw std::exception("Glow EV is null or invalid");
     }
-	if ((normalEffectVariable == nullptr) || !normalEffectVariable->IsValid())
+	if ((normalEV == nullptr) || !normalEV->IsValid())
 	{
 		throw std::exception("Normal EV is null or invalid");
 	}
-	if ((transparencyEffectVariable == nullptr) || !transparencyEffectVariable->IsValid())
+	if ((transparencyEV == nullptr) || !transparencyEV->IsValid())
 	{
 		throw std::exception("Transparency EV is null or invalid");
 	}
 
 	// Set textures
-	V(diffuseEffectVariable->SetResource(m_pDiffuseSRV));
-	V(specularEffectVariable->SetResource(m_pSpecularSRV));
-	V(glowEffectVariable->SetResource(m_pGlowSRV));
-	V(normalEffectVariable->SetResource(m_pNormalSRV));
-	V(transparencyEffectVariable->SetResource(m_pTransparencySRV));
+	V(diffuseEV->SetResource(m_pDiffuseSRV));
+	V(specularEV->SetResource(m_pSpecularSRV));
+	V(glowEV->SetResource(m_pGlowSRV));
+	V(normalEV->SetResource(m_pNormalSRV));
+	V(transparencyEV->SetResource(m_pTransparencySRV));
 
 	// Bind the terrain vertex buffer to the input assembler stage 
 	ID3D11Buffer* vbs[] = { m_pVertexBuffer, };
@@ -162,8 +159,8 @@ HRESULT Mesh::loadFile(const char * filename, std::vector<uint8_t>& data)
 	return S_OK;
 }
 
-HRESULT Mesh::createTexture(ID3D11Device* device, const std::wstring& filename, ID3D11Texture2D** tex, 
-					  ID3D11ShaderResourceView** srv)
+HRESULT Mesh::createTexture(ID3D11Device* device, const std::wstring& filename,
+							ID3D11Texture2D** tex, ID3D11ShaderResourceView** srv)
 {
 	HRESULT hr;
 	
@@ -180,12 +177,12 @@ HRESULT Mesh::createTexture(ID3D11Device* device, const std::wstring& filename, 
 
 #pragma region Constructors & Destructors
 
-Mesh::Mesh(	const std::string& filename_t3d,
-			const std::string& filename_dds_diffuse,
-			const std::string& filename_dds_specular,
-			const std::string& filename_dds_glow,
-			const std::string& filename_dds_normal,
-			const std::string& filename_dds_transparency):
+Mesh::Mesh(	const std::string& filenameT3d,
+			const std::string& filenameDDSDiffuse,
+			const std::string& filenameDDSSpecular,
+			const std::string& filenameDDSGlow,
+			const std::string& filenameDDSNormal,
+			const std::string& filenameDDSTransparency):
 	m_pVertexBuffer(NULL), m_pIndexBuffer(NULL),
 	m_iIndexCount(0),
 	m_pDiffuseTex(NULL), m_pDiffuseSRV(NULL),
@@ -194,26 +191,26 @@ Mesh::Mesh(	const std::string& filename_t3d,
 	m_pNormalTex(NULL), m_pNormalSRV(NULL),
 	m_pTransparencyTex(NULL), m_pTransparencySRV(NULL)
 {
-	m_sFilenameT3d = std::wstring(filename_t3d.begin(), filename_t3d.end());
-	m_sFilenameDDSDiffuse = std::wstring(filename_dds_diffuse.begin(), filename_dds_diffuse.end());
-	m_sFilenameDDSSpecular = std::wstring(filename_dds_specular.begin(), filename_dds_specular.end());
-	m_sFilenameDDSGlow = std::wstring(filename_dds_glow.begin(), filename_dds_glow.end());
-	m_sFilenameDDSNormal = std::wstring(filename_dds_normal.begin(), filename_dds_normal.end());
-	m_sFilenameDDSTransparency = std::wstring(filename_dds_transparency.begin(), filename_dds_transparency.end());
+	m_sFilenameT3d = std::wstring(filenameT3d.begin(), filenameT3d.end());
+	m_sFilenameDDSDiffuse = std::wstring(filenameDDSDiffuse.begin(), filenameDDSDiffuse.end());
+	m_sFilenameDDSSpecular = std::wstring(filenameDDSSpecular.begin(), filenameDDSSpecular.end());
+	m_sFilenameDDSGlow = std::wstring(filenameDDSGlow.begin(), filenameDDSGlow.end());
+	m_sFilenameDDSNormal = std::wstring(filenameDDSNormal.begin(), filenameDDSNormal.end());
+	m_sFilenameDDSTransparency = std::wstring(filenameDDSTransparency.begin(), filenameDDSTransparency.end());
 }
 
-Mesh::Mesh(	const std::wstring& filename_t3d,
-			const std::wstring& filename_dds_diffuse,
-			const std::wstring& filename_dds_specular,
-			const std::wstring& filename_dds_glow,
-			const std::wstring& filename_dds_normal,
-			const std::wstring& filename_dds_transparency):
-	m_sFilenameT3d(filename_t3d),
-	m_sFilenameDDSDiffuse(filename_dds_diffuse),
-	m_sFilenameDDSSpecular(filename_dds_specular),
-	m_sFilenameDDSGlow(filename_dds_glow),
-	m_sFilenameDDSNormal(filename_dds_normal),
-	m_sFilenameDDSTransparency(filename_dds_transparency),
+Mesh::Mesh(	const std::wstring& filenameT3d,
+			const std::wstring& filenameDDSDiffuse,
+			const std::wstring& filenameDDSSpecular,
+			const std::wstring& filenameDDSGlow,
+			const std::wstring& filenameDDSNormal,
+			const std::wstring& filenameDDSTransparency):
+	m_sFilenameT3d(filenameT3d),
+	m_sFilenameDDSDiffuse(filenameDDSDiffuse),
+	m_sFilenameDDSSpecular(filenameDDSSpecular),
+	m_sFilenameDDSGlow(filenameDDSGlow),
+	m_sFilenameDDSNormal(filenameDDSNormal),
+	m_sFilenameDDSTransparency(filenameDDSTransparency),
 	m_pVertexBuffer(NULL), m_pIndexBuffer(NULL),
 	m_iIndexCount(0),
 	m_pDiffuseTex(NULL), m_pDiffuseSRV(NULL),

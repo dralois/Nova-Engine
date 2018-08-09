@@ -7,8 +7,8 @@
 #include <d3dx11effect.h>
 #include <DDSTextureLoader.h>
 
-#include "3DRenderer.h"
-#include "Util.cpp"
+#include "Effect3D.h"
+#include "Util.h"
 
 // Shield vertex
 struct ShieldVertexIn {
@@ -29,7 +29,7 @@ public:
 	void destroy();
 
 	// Create depth buffer
-	static HRESULT createDepthBuffer(ID3D11Device * pDevice, UINT width, UINT height);
+	static HRESULT createDepthBuffer(ID3D11Device* pDevice, UINT width, UINT height);
 	// Destroy depth buffer
 	static void destroyDepthBuffer();
 
@@ -39,8 +39,8 @@ public:
 	static void destroyInputLayout();
 
 	// Render the effect
-	HRESULT render(ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
-		ID3DX11EffectShaderResourceVariable* diffuseTex);
+	HRESULT render(	ID3D11DeviceContext* context, ID3DX11EffectPass* pass,
+					ID3DX11EffectShaderResourceVariable* diffuseEV);
 
 	// Depth buffer as texture
 	static ID3D11ShaderResourceView*	g_pDepthSRV;

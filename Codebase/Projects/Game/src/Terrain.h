@@ -6,9 +6,9 @@
 #include <DDSTextureLoader.h>
 
 #include "ConfigParser.h"
-#include "3DRenderer.h"
+#include "Effect3D.h"
 #include "SimpleImage.h"
-#include "Util.cpp"
+#include "Util.h"
 
 class Terrain
 {
@@ -29,19 +29,19 @@ public:
 private:
 
 	// Configuration
-	int iResolution;
-	ConfigParser configParser;
+	int m_iResolution;
+	ConfigParser m_ConfigParser;
 
 	// Heightfield
-	vector<float> dHeightfield;
+	vector<float> m_arrHeightfield;
 
 	// Terrain rendering resources
-	ID3D11Buffer*                           indexBuffer;		// The terrain's triangulation
-	ID3D11Buffer*							heightBuffer;		// Heightmap buffer
-	ID3D11ShaderResourceView*				heightBufferSRV;	// Heightmap desc
-	ID3D11Texture2D*                        normalTexture;		// Normalmap texure
-	ID3D11ShaderResourceView*				normalTextureSRV;	// Normalmap desc
-	ID3D11Texture2D*                        diffuseTexture;		// The terrain's material color for diffuse lighting
-	ID3D11ShaderResourceView*               diffuseTextureSRV;	// Describes the structure of the diffuse texture to the shader stages
+	ID3D11Buffer*                           m_pIndexBuffer;			// The terrain's triangulation
+	ID3D11Buffer*							m_pHeightBuffer;		// Heightmap buffer
+	ID3D11ShaderResourceView*				m_pHeightBufferSRV;		// Heightmap desc
+	ID3D11Texture2D*                        m_pNormalTexture;		// Normalmap texure
+	ID3D11ShaderResourceView*				m_pNormalTextureSRV;	// Normalmap desc
+	ID3D11Texture2D*                        m_pDiffuseTexture;		// The terrain's material color for diffuse lighting
+	ID3D11ShaderResourceView*               m_pDiffuseTextureSRV;	// Describes the structure of the diffuse texture to the shader stages
 };
 

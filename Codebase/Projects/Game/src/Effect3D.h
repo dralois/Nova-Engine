@@ -10,24 +10,17 @@
 #include <sstream>
 #include <vector>
 
-// Convenience macros for safe effect variable retrieval
-#define SAFE_GET_PASS(Technique, name, var)   {assert(Technique!=NULL); var = Technique->GetPassByName( name );						assert(var->IsValid());}
-#define SAFE_GET_TECHNIQUE(effect, name, var) {assert(effect!=NULL); var = effect->GetTechniqueByName( name );						assert(var->IsValid());}
-#define SAFE_GET_SCALAR(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsScalar();			assert(var->IsValid());}
-#define SAFE_GET_VECTOR(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsVector();			assert(var->IsValid());}
-#define SAFE_GET_MATRIX(effect, name, var)    {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsMatrix();			assert(var->IsValid());}
-#define SAFE_GET_SAMPLER(effect, name, var)   {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsSampler();			assert(var->IsValid());}
-#define SAFE_GET_RESOURCE(effect, name, var)  {assert(effect!=NULL); var = effect->GetVariableByName( name )->AsShaderResource();	assert(var->IsValid());}
+#include "Util.h"
 
-struct GameEffect
+struct Effect3D
 {
-	// A D3DX rendering effect
 	ID3DX11Effect*                          g_pEffect;					// The whole rendering effect
 	ID3DX11EffectTechnique*                 g_pTechnique;				// One technique to render all the effects
 
-	ID3DX11EffectPass*                      g_pTerrainPass0;			// Terrain rendering pass
-	ID3DX11EffectPass*                      g_pMeshPass1;				// Mesh rendering pass
-	ID3DX11EffectPass*						g_pShieldPass2;				// Shield rendering pass
+	ID3DX11EffectPass*                      g_pTerrainPass;				// Terrain rendering pass
+	ID3DX11EffectPass*                      g_pTerrainDepth;			// Terrain rendering pass
+	ID3DX11EffectPass*                      g_pMeshPass;				// Mesh rendering pass
+	ID3DX11EffectPass*						g_pShieldPass;				// Shield rendering pass
 	
 	ID3DX11EffectMatrixVariable*            g_pWorldMatrix;				// World transformation matrix effect variable
 	ID3DX11EffectMatrixVariable*			g_pWorldNormalMatrix;		// Matrix for normal tranformation
@@ -48,7 +41,10 @@ struct GameEffect
 	ID3DX11EffectShaderResourceVariable*	g_pTerrainHeightTexture2D;	// Heightmap texture
 	ID3DX11EffectScalarVariable*			g_pTerrainResolution;		// Resolution of the terrain
 
-	GameEffect() { ZeroMemory(this, sizeof(*this)); }
+	bool									m_fIsCreated = false;		// Has the effect been created?
+
+	// Deletes the effect!
+	Effect3D() { ZeroMemory(this, sizeof(*this)); }
 
 	HRESULT create(ID3D11Device* device, ConfigParser parser)
 	{
@@ -57,7 +53,7 @@ struct GameEffect
 
 		// Find and load the rendering effect
 		std::string shaderFolder = parser.GetShaderFolder();
-		std::wstring shaderPath = std::wstring(shaderFolder.begin(), shaderFolder.end()) + L"3DRenderer.fxo";
+		std::wstring shaderPath = std::wstring(shaderFolder.begin(), shaderFolder.end()) + L"3DShaders.fxo";
 		V_RETURN(DXUTFindDXSDKMediaFileCch(path, MAX_PATH, shaderPath.c_str()));
 		std::ifstream is(path, std::ios_base::binary);
 		is.seekg(0, std::ios_base::end);
@@ -66,17 +62,21 @@ struct GameEffect
 		std::vector<char> effectBuffer((unsigned int)pos);
 		is.read(&effectBuffer[0], pos);
 		is.close();
+
+		// Create the effect
 		V_RETURN(D3DX11CreateEffectFromMemory((const void*)&effectBuffer[0], effectBuffer.size(), 0, device, &g_pEffect));    
 		assert(g_pEffect->IsValid());
 
+		// Effect now valid
+		m_fIsCreated = true;
+
 		// Obtain the effect technique
 		SAFE_GET_TECHNIQUE(g_pEffect, "Render", g_pTechnique);
-
 		// Obtain the effect passes
-		SAFE_GET_PASS(g_pTechnique, "P0_Terrain", g_pTerrainPass0);
-		SAFE_GET_PASS(g_pTechnique, "P1_Mesh", g_pMeshPass1);
-		SAFE_GET_PASS(g_pTechnique, "P2_Shield", g_pShieldPass2);
-
+		SAFE_GET_PASS(g_pTechnique, "P0_Terrain", g_pTerrainPass);
+		SAFE_GET_PASS(g_pTechnique, "P0_Depth", g_pTerrainDepth);
+		SAFE_GET_PASS(g_pTechnique, "P1_Mesh", g_pMeshPass);
+		SAFE_GET_PASS(g_pTechnique, "P2_Shield", g_pShieldPass);
 		// Obtain vars for general math
 		SAFE_GET_MATRIX(g_pEffect, "g_World", g_pWorldMatrix);
 		SAFE_GET_MATRIX(g_pEffect, "g_WorldNormals", g_pWorldNormalMatrix);
@@ -102,8 +102,10 @@ struct GameEffect
 
 	void destroy()
 	{
-		SAFE_RELEASE(g_pEffect);
+		// Destroy only if effect was created
+		if(m_fIsCreated)
+			SAFE_RELEASE(g_pEffect);
 	}
 };
 
-extern GameEffect g_3DRenderEffect;
+extern Effect3D g_Effect3D;
