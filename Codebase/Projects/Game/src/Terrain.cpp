@@ -95,18 +95,12 @@ HRESULT Terrain::create(ID3D11Device* device, ConfigParser parser)
 	device->CreateShaderResourceView(m_pHeightBuffer, &desc, &m_pHeightBufferSRV);
 
 	// Convert strings	
-	wchar_t * color =  Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().ColorMap).c_str());
-	wchar_t * normal = Util::strToWChar_t((parser.GetResourceFolder() + parser.GetTerrainInfo().NormalMap).c_str());
+	wstring color = Util::toWString(parser.GetResourceFolder() + parser.GetTerrainInfo().ColorMap);
+	wstring normal = Util::toWString(parser.GetResourceFolder() + parser.GetTerrainInfo().NormalMap);
 
-	// Load color texture (color for terrain)
-	V(DirectX::CreateDDSTextureFromFile(device, color, nullptr, &m_pDiffuseTextureSRV));
-	
-	// Load normal texture (normals for terrain)
-	V(DirectX::CreateDDSTextureFromFile(device, normal, nullptr, &m_pNormalTextureSRV));
-
-	// Cleanup
-	delete[] color;
-	delete[] normal;
+	// Load color & normal texture
+	V(DirectX::CreateDDSTextureFromFile(device, color.c_str(), nullptr, &m_pDiffuseTextureSRV))	
+	V(DirectX::CreateDDSTextureFromFile(device, normal.c_str(), nullptr, &m_pNormalTextureSRV));
 
 	// Error handling
 	if (hr != S_OK) {

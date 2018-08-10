@@ -1,7 +1,7 @@
 #include "Shield.h"
 
 #define PI 3.141592654F
-#define SHIELDTEX L"resources\\shield01.DDS"
+#define SHIELDTEX "shield01.DDS"
 
 using namespace std;
 using namespace DirectX;
@@ -12,7 +12,7 @@ ID3D11DepthStencilView* Shield::g_pDepthStencilView;
 
 #pragma region Methods
 
-HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
+HRESULT Shield::create(ID3D11Device * pDevice, int loopcount, const string& resourcePath)
 {
 	HRESULT hr;
 
@@ -86,7 +86,8 @@ HRESULT Shield::create(ID3D11Device * pDevice, int loopcount)
 	m_iVertexCount = l_arrSphere.size();
 
 	// Create texture
-	V(DirectX::CreateDDSTextureFromFile(pDevice, SHIELDTEX, (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
+	wstring texPath = Util::toWString(resourcePath + SHIELDTEX);
+	V(DirectX::CreateDDSTextureFromFile(pDevice, texPath.c_str(), (ID3D11Resource**) &m_pShieldTex2D, &m_pShieldTexSRV));
 
 	return S_OK;
 }

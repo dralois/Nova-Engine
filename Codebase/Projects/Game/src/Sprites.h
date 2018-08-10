@@ -3,11 +3,8 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <iostream>
 
 #include <DXUT.h>
-#include "SDKmisc.h"
 #include <DXUTcamera.h>
 #include <d3dx11effect.h>
 #include <DDSTextureLoader.h>

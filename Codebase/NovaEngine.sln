@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{6F990B3D-6195-4973-9765-8725CE665780}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{D0031DAA-4812-49B0-84AE-477148081144}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\dirassembler.bat = Tools\dirassembler.bat
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Game", "Game", "{111C02E6-2F03-4AAB-8ED8-91B642EC27E1}"
 EndProject

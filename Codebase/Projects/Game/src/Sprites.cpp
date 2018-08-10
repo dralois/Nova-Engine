@@ -37,11 +37,10 @@ HRESULT Sprites::create(ID3D11Device* pDevice, ID3DX11EffectPass* pass, ConfigPa
 	// Create the textures
 	for (auto it = l_Sprites.begin(); it != l_Sprites.end(); it++) {
 		ID3D11ShaderResourceView * nextView;
-		wchar_t * asWChar = Util::strToWChar_t(parser.GetResourceFolder() + it->second.FilePath);
-		V_RETURN(DirectX::CreateDDSTextureFromFile(pDevice, asWChar, nullptr, &nextView));
+		wstring nextPath = Util::toWString(parser.GetResourceFolder() + it->second.FilePath);
+		V_RETURN(DirectX::CreateDDSTextureFromFile(pDevice, nextPath.c_str(), nullptr, &nextView));
 		m_pSpriteSRVs.push_back(nextView);
 		m_dicSpriteIDs[it->first] = l_iCount++;
-		delete asWChar;
 	}
 
 	return S_OK;
@@ -61,7 +60,7 @@ void Sprites::destroy()
 	m_dicSpriteIDs.clear();
 }
 
-HRESULT Sprites::createInputLayout(ID3D11Device * device, ID3DX11EffectPass * pass)
+HRESULT Sprites::createInputLayout(ID3D11Device* device, ID3DX11EffectPass* pass)
 {
 	HRESULT hr;
 

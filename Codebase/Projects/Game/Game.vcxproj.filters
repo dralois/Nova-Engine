@@ -39,6 +39,9 @@
     <ClInclude Include="src\Sprites.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\Skybox.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ConfigParser.cpp">
@@ -64,6 +67,9 @@
     </ClCompile>
     <ClCompile Include="src\Util.h">
       <Filter>Headerdateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Skybox.cpp">
+      <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

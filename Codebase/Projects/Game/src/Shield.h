@@ -24,7 +24,7 @@ public:
 	~Shield();
 
 	// Create the resources
-	HRESULT create(ID3D11Device* pDevice, int loopcount);
+	HRESULT create(ID3D11Device* pDevice, int loopcount, const string& resourcePath);
 	// Release the resources
 	void destroy();
 

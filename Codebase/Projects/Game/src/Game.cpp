@@ -26,6 +26,7 @@
 
 #include "Mesh.h"
 #include "Shield.h"
+#include "Skybox.h"
 #include "Terrain.h"
 #include "Sprites.h"
 #include "Effect2D.h"
@@ -125,6 +126,7 @@ float									g_spawnTimer = 0.0f;
 
 // Sprite renderer
 Sprites*								g_Sprites;
+Skybox*									g_Skybox;
 
 // Guns
 vector<GunInstance>						g_Guns;
@@ -244,7 +246,8 @@ void InitApp()
 		}
 	}
 
-	// Initialize the sprite & shield renderer
+	// Initialize the skybox, sprite & shield renderer
+	g_Skybox = new Skybox();
 	g_Sprites = new Sprites();
 	g_EnemyShield = new Shield();
 
@@ -294,9 +297,9 @@ void DeinitApp()
 	// Clear mesh map
 	g_Meshes.clear();
 	g_Transparent.clear();
-	// Delete sprite renderer
+	// Delete skybox, sprite & shield renderer
+	SAFE_DELETE(g_Skybox);
 	SAFE_DELETE(g_Sprites);
-	// Delete shield renderer
 	SAFE_DELETE(g_EnemyShield);
 }
 
@@ -393,11 +396,10 @@ HRESULT CALLBACK OnD3D11CreateDevice(ID3D11Device* pd3dDevice,
 		V_RETURN(it->second->create(pd3dDevice));
 	}
 
-	// Create the shield
-	V_RETURN(g_EnemyShield->create(pd3dDevice, 10));
-
-	// Create sprite renderer resources
+	// Create the skybox, sprite and shield resources
+	V_RETURN(g_Skybox->create(pd3dDevice, g_Effect2D.g_pSpritePass, g_configParser.GetResourceFolder()));
 	V_RETURN(g_Sprites->create(pd3dDevice, g_Effect2D.g_pSpritePass, g_configParser));
+	V_RETURN(g_EnemyShield->create(pd3dDevice, 10, g_configParser.GetResourceFolder()));
 
 	return S_OK;
 }
@@ -430,12 +432,11 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext)
 	for (auto it = g_Transparent.begin(); it != g_Transparent.end(); it++) {
 		it->second->destroy();
 	}
-
-	// Destroy shield renderer
-	g_EnemyShield->destroy();
-
-	// Destroy sprite renderer
+	
+	// Destroy skybox, sprite & shield renderer
+	g_Skybox->destroy();
 	g_Sprites->destroy();
+	g_EnemyShield->destroy();
 
 	SAFE_DELETE(g_txtHelper);
 	ReleaseShader();
@@ -939,7 +940,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 	}
 
 	//--------------------------------------------------------------------------------------
-	// Terrain
+	// Terrain depth for shadows and shield interaction
 	//--------------------------------------------------------------------------------------
 
 	// Depth buffer rendering first
@@ -972,8 +973,17 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* pd3dDevice, ID3D11DeviceContext* 
 
 	// Set the depth texture
 	V(g_Effect3D.g_pDepthBuffer2D->SetResource(Shield::g_pDepthSRV));
+	
+	//--------------------------------------------------------------------------------------
+	// Skybox
+	//--------------------------------------------------------------------------------------
 
-	// Perform normal rendering
+	g_Skybox->render(pd3dImmediateContext, g_Effect2D.g_pSkyboxPass, g_camera);
+
+	//--------------------------------------------------------------------------------------
+	// Terrain
+	//--------------------------------------------------------------------------------------
+	
 	g_terrain.render(pd3dImmediateContext, g_Effect3D.g_pTerrainPass);
 
 	//--------------------------------------------------------------------------------------

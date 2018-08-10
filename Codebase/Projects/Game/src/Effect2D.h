@@ -21,10 +21,13 @@ struct Effect2D
 	ID3DX11EffectPass*                      g_pSkyboxPass;				// Skybox rendering pass
 
 	ID3DX11EffectMatrixVariable*			g_pViewProjectionMatrix;	// Matrix for sprite correction
+	ID3DX11EffectMatrixVariable*			g_pViewProjectionMatrixInv;	// Matrix for skybox quad
 	ID3DX11EffectVectorVariable*			g_pCameraRight;				// Right vector
 	ID3DX11EffectVectorVariable*			g_pCameraUp;				// Up vector
+	ID3DX11EffectVectorVariable*			g_pCameraPos;				// Camera position
 
 	ID3DX11EffectShaderResourceVariable*    g_pTextureArray2D;			// Variable for the sprite texture
+	ID3DX11EffectShaderResourceVariable*	g_pSkybox;					// Skybox cubemap
 
 	bool									m_fIsCreated = false;		// Has the effect been created?
 
@@ -62,10 +65,13 @@ struct Effect2D
 		SAFE_GET_PASS(g_pTechnique, "P1_Skybox", g_pSkyboxPass);
 		// Obtain general math vars
 		SAFE_GET_MATRIX(g_pEffect, "g_ViewProjection", g_pViewProjectionMatrix);
+		SAFE_GET_MATRIX(g_pEffect, "g_ViewProjectionInv", g_pViewProjectionMatrixInv);
 		SAFE_GET_VECTOR(g_pEffect, "g_CameraRight", g_pCameraRight);
 		SAFE_GET_VECTOR(g_pEffect, "g_CameraUp", g_pCameraUp);
+		SAFE_GET_VECTOR(g_pEffect, "g_CameraPos", g_pCameraPos);
 		// Obtain texture vars
 		SAFE_GET_RESOURCE(g_pEffect, "g_Textures", g_pTextureArray2D);
+		SAFE_GET_RESOURCE(g_pEffect, "g_Skybox", g_pSkybox);
 
 		return S_OK;
 	}

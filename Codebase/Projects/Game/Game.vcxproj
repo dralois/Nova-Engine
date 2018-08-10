@@ -266,6 +266,7 @@ exit 1</Command>
     <ClInclude Include="src\Debug.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Shield.h" />
+    <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\Sprites.h" />
     <ClInclude Include="src\T3d.h" />
     <ClInclude Include="src\Terrain.h" />
@@ -275,6 +276,7 @@ exit 1</Command>
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Shield.cpp" />
+    <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\Sprites.cpp" />
     <ClCompile Include="src\T3d.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
